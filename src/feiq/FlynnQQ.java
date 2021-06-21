@@ -1,80 +1,260 @@
 package feiq;
 
 import javax.swing.*;
-import javax.swing.event.MouseInputAdapter;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
-import javax.xml.bind.annotation.XmlType;
 import java.awt.*;
+
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.*;
 import java.awt.event.*;
+import java.io.*;
 import java.net.*;
+
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class FlynnQQ {
     private LoginForm loginForm = null;
-    private CharForm charForm = null;
+    private ChatForm chatForm = null;
     private MainForm mainForm = null;
-    private MySQL mysql = null;
+    private FileForm fileForm = null;
     private String root = null;
     private String ip = null;
+    private String nick = null;
+    private Connection connection = null;
+    private ResultSet result = null;
     private Socket socket = null;
     private PreparedStatement ps = null;
-    private HeadIcon[] headIcon = null;
     private int headCount;
     private int head_num;
     private HeadIcon userIcon = null;
+    private ConList[] conList = null;
+    private ChatFormPool chatPool = null;
+    private msgRecThread recThread = null;
+    private int maxFileCount = 50;
 
+    //TODO init
     private FlynnQQ() {
         init();
     }
-
-    private void init() {
-        root = "./images/";
-        headCount = 45;
-        head_num = 2;
-        headIcon = new HeadIcon[headCount + 1];
-        for (int i = 1; i <= headCount; i++) {
-            headIcon[i] = new HeadIcon(i + ".jpg");
-            headIcon[i].setIndex(i);
+    private void init(){
+        try {
+            ip = InetAddress.getLocalHost().getHostAddress();
+            root = "./images/";
+            headCount = 45;
+            head_num = 2;
+            loginForm =  new LoginForm();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         }
-        loginForm = new LoginForm();
+    }
+    private static class Server{
+        private static String ip = "10.8.24.99";
+        private static String password = "root";
+        private static String username = "root";
+        private static Server server = new Server();
     }
 
-    private static class HeadIcon extends ImageIcon {
-        private int index;
+    private void fileSend(String ip){
+        fileForm.isSend(ip);
+    }
 
-        HeadIcon(String filename) {
-            super("./headicons/" + filename);
+    private class msgRecThread implements Runnable{
+        @Override
+        public void run() {
+            msgRec();
+        }
+    }
+
+    private class ChatFormPool {
+        private ChatForm[] chatPool;
+        private String[] ip;
+        private int pCount = 50;
+        ChatFormPool(){
+            chatPool = new ChatForm[pCount];
+            ip = new String[pCount];
+            for (int i = 0; i < pCount; i++) {
+                chatPool[i] = null;
+                ip[i] = "";
+            }
+        }
+        private ChatForm getChatForm(String ip){
+            for (int i = 0; i < pCount; i++) {
+                if(this.ip[i].trim().equals(ip))
+                    return chatPool[i];
+            }
+            return null;
+        }
+        private ChatForm createChatForm(ConList con){
+            if(getChatForm(con.getIp())==null)
+                for (int i = 0; i < pCount; i++) {
+                    if(this.ip[i].trim().equals("")){
+                        chatPool[i] = new ChatForm(con);
+                        ip[i] = con.getIp();
+                        return chatPool[i];
+                    }
+                }
+            return getChatForm(con.getIp());
+        }
+        private void returnChatForm(ChatForm cf){
+            for (int i = 0; i < pCount; i++)
+                if (chatPool[i] == cf) {
+                    chatPool[i] = null;
+                    this.ip[i] = "";
+                }
         }
 
-        public int getIndex() {
-            return index;
+    }
+
+
+    //TODO msgRec
+    private void msgRec(){
+        while (true) {
+            try {
+                byte[] byteRec = new byte[1024];
+                int len;
+                StringBuilder strB = new StringBuilder();
+                String strEnd = "";
+                while ((len = socket.getInputStream().read(byteRec)) != -1) {
+                    strEnd = new String(byteRec, 0, len);
+                    if(strEnd.contains("@END"))break;
+                    strB.append(strEnd);
+                }
+                if(strEnd.indexOf("@END")!=0)
+                    strB.append(strEnd,0,strEnd.indexOf("@END"));
+                //System.out.println(strB.toString());
+                String strRec = strB.toString();
+                int pos = strRec.indexOf("@");
+                String body = "";
+                //System.out.println(pos);
+                String head = strRec.substring(0, pos);
+                if(strRec.length()>pos)
+                     body = strRec.substring(pos + 1);
+                if(head.equals("OnConnect")||head.equals("DisConnect")){
+                    mainForm.notice(head,body);
+                }else if(head.equals("Refresh")){
+                    mainForm.stateRefresh(body);
+                }else if(head.equals("FileSendReady")){
+                    fileSend(body);
+                }
+                else{
+                    if(chatPool.getChatForm(head)==null) {
+                        for(ConList con:conList){
+                            if(con.getIp().trim().equals(head)){
+                                chatPool.createChatForm(con);
+                                break;
+                            }
+                        }
+                    }
+                    if(chatPool.getChatForm(head)!=null){
+                        chatPool.getChatForm(head).receive(strRec);
+                        chatPool.getChatForm(head).setVisible(true);
+                    }
+                }
+            } catch (IOException e) {
+                //System.out.println("服务器正在维护中！连接已断开...");
+                break;
+            }
+        }
+    }
+    private void msgSend(String ip,String str){
+        try {
+            String strSend = ip+"@"+str;
+            OutputStream output = socket.getOutputStream();
+            output.write(strSend.getBytes());
+            output.write("@END".getBytes());
+            output.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static class HeadIcon extends ImageIcon{
+        HeadIcon(String filename){
+            super("./headicons/"+filename);
+        }
+    }
+
+    private static class ConList extends  JLabel{
+        private String ip;
+        private String nickname;
+        private String headPic;
+        private ImageIcon normalIcon;
+        private ImageIcon checkedIcon;
+        ConList(){
+            super();
+        }
+        ConList(ImageIcon filename){
+            super(filename);
+        }
+        ConList(String ip,String nickname,String headPic,ImageIcon normalIcon,ImageIcon checkedIcon){
+            this.ip = ip;
+            this.nickname = nickname;
+            this.headPic = headPic;
+            this.normalIcon = normalIcon;
+            this.checkedIcon = checkedIcon;
+        }
+        private ImageIcon getNormalIcon() {
+            return normalIcon;
         }
 
-        public void setIndex(int index) {
-            this.index = index;
+        public void setNormalIcon(ImageIcon normalIcon) {
+            this.normalIcon = normalIcon;
+        }
+
+        private ImageIcon getCheckedIcon() {
+            return checkedIcon;
+        }
+
+        public void setCheckedIcon(ImageIcon checkedIcon) {
+            this.checkedIcon = checkedIcon;
+        }
+
+
+        private String getIp() {
+            return ip;
+        }
+
+        public void setIp(String ip) {
+            this.ip = ip;
+        }
+
+        private String getNickname() {
+            return nickname;
+        }
+
+        public void setNickname(String nickname) {
+            this.nickname = nickname;
+        }
+
+        private String getHeadPic() {
+            return headPic;
+        }
+
+        public void setHeadPic(String headPic) {
+            this.headPic = headPic;
         }
     }
 
     //登录窗口
-    private class LoginForm extends JFrame {
+    //TODO login
+    private class LoginForm extends JFrame{
         private JLabel loadPic;
         private JLabel loginPic;
         private JLabel IPText;
         private JTextField nickText;
         private JLabel tip;
-        private String nick;
         private String head_path;
         private double xPos = 0;
         private double yPos = 0;
-        private int xStart = 0;
-        private int yStart = 0;
-        private boolean startMove = false;
         private Thread load = null;
-        private Connection connection;
         private JLabel headFirst;
         private JLabel headNow;
         private JLabel headNext;
@@ -82,92 +262,82 @@ public class FlynnQQ {
         private HeadIcon icon;
         private boolean isFind;
 
-        //TODO LoginForm
-        private LoginForm() {
-            init();
-            load = null;
-            isNext();
-            IPText.setVisible(true);
-            nickText.setVisible(true);
-            loadPic.setVisible(false);
-            headLoad.setVisible(false);
-            tip.setVisible(true);
-            this.setVisible(true);
-//            verity();
-        }
-
-        private void isLast() {
-            icon = new HeadIcon(head_num + ".jpg");
-            icon.setImage(icon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
+        private void isLast(){
+            icon = new HeadIcon(head_num+".jpg");
+            icon.setImage(icon.getImage().getScaledInstance(50, 50,Image.SCALE_DEFAULT));
             headNext.setIcon(icon);
             head_num -= 1;
-            if (head_num == 0)
+            if(head_num==0)
                 head_num = headCount;
-            icon = new HeadIcon(head_num + ".jpg");
-            icon.setImage(icon.getImage().getScaledInstance(80, 80, Image.SCALE_DEFAULT));
+            icon = new HeadIcon(head_num+".jpg");
+            icon.setImage(icon.getImage().getScaledInstance(80, 80,Image.SCALE_DEFAULT));
             headNow.setIcon(icon);
             int index = head_num - 1;
-            if (head_num == 1)
+            if(head_num==1)
                 index = headCount;
-            icon = new HeadIcon(index + ".jpg");
-            icon.setImage(icon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
+            icon = new HeadIcon(index+".jpg");
+            icon.setImage(icon.getImage().getScaledInstance(50, 50,Image.SCALE_DEFAULT));
             headFirst.setIcon(icon);
         }
 
-        private void isNext() {
-            icon = new HeadIcon(head_num + ".jpg");
-            icon.setImage(icon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
+        private void isNext(){
+            icon = new HeadIcon(head_num+".jpg");
+            icon.setImage(icon.getImage().getScaledInstance(50, 50,Image.SCALE_DEFAULT));
             headFirst.setIcon(icon);
             head_num += 1;
-            if (head_num > headCount)
+            if(head_num>headCount)
                 head_num = 1;
-            icon = new HeadIcon(head_num + ".jpg");
-            icon.setImage(icon.getImage().getScaledInstance(80, 80, Image.SCALE_DEFAULT));
+            icon = new HeadIcon(head_num+".jpg");
+            icon.setImage(icon.getImage().getScaledInstance(80, 80,Image.SCALE_DEFAULT));
             headNow.setIcon(icon);
             int index = head_num + 1;
-            if (head_num == headCount)
+            if(head_num==headCount)
                 index = 1;
-            icon = new HeadIcon(index + ".jpg");
-            icon.setImage(icon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
+            icon = new HeadIcon(index+".jpg");
+            icon.setImage(icon.getImage().getScaledInstance(50, 50,Image.SCALE_DEFAULT));
             headNext.setIcon(icon);
-
         }
 
-        private void init() {
+        private LoginForm(){
+            init();
+            verity();
+        }
+
+
+        private void init(){
             //窗口去边框
             this.setUndecorated(true);
 
-            //设置窗口拖动和关闭
             JPanel Panel = new JPanel();
             Panel.setLayout(null);
-            Panel.setBounds(0, 0, 400, 300);
-
+            Panel.setBounds(0,0,400,300);
+            
             //连接界面
             ImageIcon loadPicture = new ImageIcon(root + "connect.png");
             loadPic = new JLabel();
-            loadPic.setBounds(0, 0, 400, 300);
+            loadPic.setBounds(0,0,400,300);
             loadPic.setIcon(loadPicture);
             loadPic.setOpaque(false);
             loadPic.setVisible(false);
             Panel.add(loadPic);
             headLoad = new JLabel();
-            headLoad.setBounds(160, 110, 80, 80);
+            headLoad.setBounds(160,110,80,80);
             headLoad.setVisible(false);
             Panel.add(headLoad);
 
             //最小化和关闭
             JLabel min;
             min = new JLabel();
-            min.setBounds(340, 0, 30, 32);
+            min.setBounds(340,0,30,32);
             min.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    loginForm.dispose();
+                    setExtendedState(JFrame.ICONIFIED);
                 }
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    min.setIcon(new ImageIcon(root + "minicon.png"));
+                    min.setIcon(new ImageIcon(root + "min_onfocus.png"));
                 }
 
                 @Override
@@ -178,7 +348,7 @@ public class FlynnQQ {
             Panel.add(min);
             JLabel close;
             close = new JLabel();
-            close.setBounds(370, 0, 30, 32);
+            close.setBounds(370,0,30,32);;
             close.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -187,7 +357,7 @@ public class FlynnQQ {
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    close.setIcon(new ImageIcon(root + "closeicon.png"));
+                    close.setIcon(new ImageIcon(root + "close_onfocus.png"));
                 }
 
                 @Override
@@ -196,34 +366,32 @@ public class FlynnQQ {
                 }
             });
             Panel.add(close);
-
-
+            
             IPText = new JLabel();
-            IPText.setBounds(120, 155, 150, 20);
-            IPText.setFont(new Font("微软雅黑", Font.PLAIN, 15));
+            IPText.setBounds(120,155,150,20);
+            IPText.setFont(new Font("微软雅黑",Font.PLAIN,15));
             IPText.setHorizontalAlignment(SwingConstants.CENTER);
             Panel.add(IPText);
 
             nickText = new JTextField();
-            nickText.setBounds(120, 190, 150, 20);
-            nickText.setFont(new Font("微软雅黑", Font.PLAIN, 15));
+            nickText.setBounds(120,190,150,20);
+            nickText.setFont(new Font("微软雅黑",Font.PLAIN,15));
             nickText.setBorder(BorderFactory.createEmptyBorder());
             nickText.setHorizontalAlignment(JTextField.CENTER);
             nickText.addKeyListener(new KeyAdapter() {
                 @Override
                 public void keyReleased(KeyEvent e) {
-                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        head_path = head_num + ".jpg";
+                    if(e.getKeyCode() == KeyEvent.VK_ENTER){
+                        head_path = head_num+".jpg";
                         connect();
                     }
-
                 }
             });
             Panel.add(nickText);
 
             tip = new JLabel("连接服务器失败,请检查网络!");
-            tip.setBounds(120, 220, 160, 20);
-            tip.setFont(new Font("微软雅黑", Font.PLAIN, 12));
+            tip.setBounds(120,220,160,20);
+            tip.setFont(new Font("微软雅黑",Font.PLAIN,12));
             tip.setForeground(Color.RED);
             tip.setVisible(false);
             Panel.add(tip);
@@ -232,26 +400,23 @@ public class FlynnQQ {
             loginButton.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    head_path = head_num + ".jpg";
-//                    connect();
-                    nick = nickText.getText();
-                    userIcon = new HeadIcon(head_path);
-                    mainForm = new MainForm(nick);
+                    head_path = head_num+".jpg";
+                    connect();
                 }
             });
-            loginButton.setBounds(93, 247, 218, 30);
+            loginButton.setBounds(93,247,218,30);
             Panel.add(loginButton);
 
             ImageIcon backPic = new ImageIcon(root + "FirstPage.png");
             loginPic = new JLabel();
             loginPic.setOpaque(false);
-            loginPic.setBounds(0, 0, 400, 300);
+            loginPic.setBounds(0,0,400,300);;
             loginPic.setIcon(backPic);
             Panel.add(loginPic);
 
             //设置头像
             headFirst = new JLabel();
-            headFirst.setBounds(75, 74, 50, 50);
+            headFirst.setBounds(75,74,50,50);
             headFirst.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -260,21 +425,20 @@ public class FlynnQQ {
             });
             headFirst.setVisible(true);
             headNow = new JLabel();
-            headNow.setBounds(160, 60, 80, 80);
+            headNow.setBounds(160,60,80,80);
             headNow.addMouseWheelListener(new MouseWheelListener() {
                 @Override
                 public void mouseWheelMoved(MouseWheelEvent e) {
                     int scroll = e.getWheelRotation();
-                    if (scroll > 0)
+                    if(scroll>0)
                         isNext();
-                    else if (scroll < 0)
+                    else if(scroll<0)
                         isLast();
-
                 }
             });
             headNow.setVisible(true);
             headNext = new JLabel();
-            headNext.setBounds(275, 74, 50, 50);
+            headNext.setBounds(275,74,50,50);
             headNext.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -289,81 +453,65 @@ public class FlynnQQ {
             this.setLayout(null);
             this.setResizable(false);
             this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            this.setBounds((1920 - 400) / 2, (1080 - 300) / 2, 400, 300);
-            MouseAdapter adapter = new MouseAdapter() {
+            this.setBounds((1920 - 400)/2,(1080 - 300)/2,400,300);
+            this.addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (xPos == 0) return;
+                    setLocation(getX() + (int) (e.getXOnScreen() - xPos), getY() + (int) (e.getYOnScreen() - yPos));
+                    xPos = e.getXOnScreen();
+                    yPos = e.getYOnScreen();
+                }
+            });
+            this.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                 }
-
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    if (getMousePosition().getY() > 40)
+                    if(getMousePosition().getY()>40)
                         return;
-                    if (!startMove) {
-                        xStart = loginForm.getX();
-                        yStart = loginForm.getY();
+                    if(xPos==0){
                         xPos = e.getXOnScreen();
                         yPos = e.getYOnScreen();
-                        startMove = true;
                     }
                 }
-
-                @Override
-                public void mouseDragged(MouseEvent e) {
-                    if (!startMove) return;
-                    loginForm.setLocation(xStart + (int) (e.getXOnScreen() - xPos), yStart + (int) (e.getYOnScreen() - yPos));
-                }
-
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    if (!startMove) return;
-//                    System.out.println(loginForm.getX() + " " + loginForm.getY());
-//                    System.out.println(e.getXOnScreen() + " " + e.getYOnScreen());
-                    startMove = false;
+                    if(xPos==0)return;
+                    loginForm.setLocation(loginForm.getX()+(int)(e.getXOnScreen() - xPos),loginForm.getY()+(int)(e.getYOnScreen() - yPos));
                     xPos = 0;
                     yPos = 0;
                 }
-            };
-            this.addMouseListener(adapter);
-            this.addMouseMotionListener(adapter);
+            });
             this.add(Panel);
             this.setVisible(false);
         }
 
-        private void signUp() {
+        //连接数据库
+        //TODO sql
+        private void verity(){
             try {
-                nick = nickText.getText();
-                head_path = head_num + ".jpg";
-                ps = connection.prepareStatement("insert into users values (null,?,?,?)");
-                ps.setString(1, ip);
-                ps.setString(2, nick);
-                ps.setString(3, head_path);
-                ps.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
 
-        private void verity() {
-            try {
-                ip = InetAddress.getLocalHost().getHostAddress();
                 IPText.setText(ip);
                 Class.forName("com.mysql.jdbc.Driver");
-                connection = DriverManager.getConnection("jdbc:mysql://10.8.24.98/feiq", "root", "123456");
+                //connection = DriverManager.getConnection("jdbc:mysql://"+Server.ip+"/feiq",Server.username,Server.password);
+                connection = DriverManager.getConnection("jdbc:mysql://10.8.24.6/feiq","root","root");
                 ps = connection.prepareStatement("Select * from users where ip = ?");
-                ps.setString(1, ip);
-                ResultSet rs = ps.executeQuery();
+                ps.setString(1,ip);
+                result = ps.executeQuery();
                 isFind = false;
-                if (rs.next()) {
+                if(result.next()){
                     isFind = true;
-                    nick = rs.getString("nickname");
-                    head_path = rs.getString("headpic");
+                    nick = result.getString("nickname");
+                    head_path = result.getString("headpic");
                     connect();
-                } else {
+                }else{
                     isNext();
                     this.setVisible(true);
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 load = null;
                 isNext();
                 IPText.setVisible(true);
@@ -375,7 +523,8 @@ public class FlynnQQ {
             }
         }
 
-        private void connect() {
+        //连接按钮单击事件
+        private void connect(){
             load = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -384,7 +533,7 @@ public class FlynnQQ {
             });
             loadPic.setVisible(true);
             icon = new HeadIcon(head_path);
-            icon.setImage(icon.getImage().getScaledInstance(80, 80, Image.SCALE_DEFAULT));
+            icon.setImage(icon.getImage().getScaledInstance(80, 80,Image.SCALE_DEFAULT));
             headLoad.setIcon(icon);
             headLoad.setVisible(true);
             IPText.setVisible(false);
@@ -395,27 +544,31 @@ public class FlynnQQ {
             load.start();
         }
 
-        private void loginVerity() {
+        //登录中界面
+        private void loginVerity(){
             try {
-                Thread.sleep(1000);
+                if(!isFind){
+                    signUp();
+                    userIcon = new HeadIcon(head_num+".jpg");
+                }else
+                    userIcon = new HeadIcon(head_path);
+                mainForm = new MainForm(nick);
+                Thread.sleep(2000);
                 boolean result = true;
                 try {
-                    socket = new Socket("10.8.24.98", 2020);
-                } catch (Exception e) {
+                    socket = new Socket(Server.ip,2020);
+                } catch (Exception e){
                     result = false;
                 }
-                if (result) {
-                    if (!isFind) {
-                        signUp();
-                        userIcon = new HeadIcon(head_num + ".jpg");
-                    } else
-                        userIcon = new HeadIcon(head_path);
-
-                    mainForm = new MainForm(nick);
+                if(result){
+                    recThread = new msgRecThread();
+                    new Thread(recThread).start();
+                    msgSend("connect","");
                     loginForm.setVisible(false);
                     loginForm = null;
-                } else {
-                    if (isFind) {
+                    mainForm.setVisible(true);
+                }else{
+                    if(isFind){
                         nickText.setText(nick);
                         headNow.setIcon(headLoad.getIcon());
                         headFirst.setIcon(new HeadIcon("last.png"));
@@ -428,7 +581,22 @@ public class FlynnQQ {
                     headLoad.setVisible(false);
                     tip.setVisible(true);
                 }
+
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void signUp(){
+            try {
+                nick = nickText.getText();
+                head_path = head_num+".jpg";
+                ps = connection.prepareStatement("insert into users values (null,?,?,?)");
+                ps.setString(1,ip);
+                ps.setString(2,nick);
+                ps.setString(3,head_path);
+                ps.executeUpdate();
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
@@ -436,21 +604,29 @@ public class FlynnQQ {
 
 
     //主窗口
-    private class MainForm extends JFrame {
-        private JLabel[] friendList;
+    //TODO main
+    private class MainForm extends JFrame{
         private JLabel[] headList;
         private JLabel[] nameList;
+        private JLabel[] stateIcon;
         private JPanel mainPanel;
         private JTextField search;
         private JScrollPane scrollPane;
         private String username;
         private JLabel min;
         private JLabel close;
+        private NoticeForm noticeForm;
+        private Socket fileSocket;
+        private Thread fileThread;
+
+        private int count;
         private double xPos = 0;
         private double yPos = 0;
         private int selectNow;
         private int normal_width = 280;
         private int normal_height = 585;
+        private SystemTray systemTray = null;
+        private TrayIcon trayIcon = null;
 
         private int list_normal_height = 40;
         private int list_onfocus_height = 60;
@@ -460,7 +636,9 @@ public class FlynnQQ {
         private ImageIcon list_checked_bg;
 
         private int head_normal_height = 30;
+        private int head_normal_width = 30;
         private int head_onfocus_height = 48;
+        private int head_onfocus_width = 48;
         private int head_normal_top_padding = 5;
         private int head_onfocus_top_padding = 6;
         private ImageIcon head_normal_bg;
@@ -473,19 +651,74 @@ public class FlynnQQ {
         private int name_onfocus_height = 60;
         private int name_onfocus_padding = 88;
 
-        private MainForm(String username) {
+        private MainForm(String username){
+            this.setVisible(false);
+            chatPool = new ChatFormPool();
             this.username = username;
             init();
-            listRefresh(new JLabel());
+            listRefresh(new ConList());
+            fileForm = new FileForm();
+        }
+        private void stateRefresh(String str){
+            if(count>0){
+                for (int i = 0; i < count; i++) {
+                    if(str.contains(conList[i].getIp()))
+                        stateIcon[i].setIcon(new ImageIcon(root+"onconnect.png"));
+                    else
+                        stateIcon[i].setIcon(new ImageIcon(root+"disconnect.png"));
+                }
+            }
         }
 
-        private void init() {
+        private void notice(String type,String ip){
+            for (int i = 0; i < count; i++) {
+                if(ip.equals(conList[i].getIp())){
+                    stateIcon[i].setIcon(new ImageIcon(root+type+".png"));
+                    noticeForm = new NoticeForm(conList[i],type);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(3000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            noticeForm.setVisible(false);
+                            noticeForm = null;
+                        }
+                    }).start();
+                }
+            }
+        }
+
+        private void init(){
             this.setUndecorated(true);
-            list_normal_bg = new ImageIcon(root + "list_white.png");
-            list_onfocus_bg = new ImageIcon(root + "list_blue.png");
-            list_checked_bg = new ImageIcon(root + "list_checked_blue.png");
-            head_normal_bg = new ImageIcon(root + "head_normal.png");
-            head_checked_bg = new ImageIcon(root + "head_checked.jpg");
+            this.setType(Type.UTILITY);
+            Image icon = new ImageIcon(root + "icon.png").getImage();
+            trayIcon=new TrayIcon(icon,"fq" );
+            //trayIcon.setImageAutoSize(true);
+            trayIcon.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    setVisible(true);
+                }
+            });
+            try {
+                if (systemTray==null) {
+                    systemTray=SystemTray.getSystemTray();
+                    if (trayIcon!=null) {
+                        systemTray.remove(trayIcon);
+                    }
+                }
+                systemTray.add(trayIcon);
+            } catch (AWTException e1) {
+                e1.printStackTrace();
+            }
+            list_normal_bg = new ImageIcon(root+"list_white.png");
+            list_onfocus_bg = new ImageIcon(root+"list_blue.png");
+            list_checked_bg = new ImageIcon(root+"list_checked_blue.png");
+            head_normal_bg = new ImageIcon(root+"head_normal.png");
+            head_checked_bg = new ImageIcon(root+"head_checked.jpg");
             selectNow = -1;
             min = new JLabel();
             close = new JLabel();
@@ -495,48 +728,49 @@ public class FlynnQQ {
             panel.setVisible(true);
 
             mainPanel = new JPanel();
-            mainPanel.setBounds(0, 0, normal_width, normal_height);
+            mainPanel.setBounds(0,0,normal_width,normal_height);
             mainPanel.setLayout(null);
 
-
             JLabel userName = new JLabel(username);
-            userName.setFont(new Font("微软雅黑", Font.BOLD, 14));
+            userName.setFont(new Font("微软雅黑",Font.BOLD,15));
             userName.setForeground(Color.WHITE);
-            userName.setBounds(105, 50, 125, 25);
+            userName.setBounds(105,50,125,25);
             mainPanel.add(userName);
 
             search = new JTextField();
             search.setOpaque(false);
-            search.setBounds(35, 110, 240, 20);
-            search.setFont(new Font("微软雅黑", Font.PLAIN, 10));
+            search.setBounds(35,110,240,20);
+            search.setFont(new Font("微软雅黑",Font.PLAIN,10));
             search.setBorder(BorderFactory.createEmptyBorder());
             mainPanel.add(search);
 
+            //滚动条
             scrollPane = new JScrollPane(panel);
-            JLabel scroll = new JLabel(new ImageIcon(root + "Scrollbarlostfocus.png"));
+            JLabel scroll = new JLabel(new ImageIcon(root+"Scrollbarlostfocus.png"));
+            scroll.setVisible(false);
             scroll.setOpaque(false);
-            scroll.setBounds(273, 210, 7, 31);
+            scroll.setBounds(273,210,7,31);
             scroll.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    scroll.setIcon(new ImageIcon(root + "Scrollbaronfocus.png"));
+                    scroll.setIcon(new ImageIcon(root+"Scrollbaronfocus.png"));
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    scroll.setIcon(new ImageIcon(root + "Scrollbarlostfocus.png"));
+                    scroll.setIcon(new ImageIcon(root+"Scrollbarlostfocus.png"));
                 }
             });
             mainPanel.add(scroll);
 
-            scrollPane.setBounds(0, 180, 300, 380);
+            scrollPane.setBounds(0,180,300,380);
             scrollPane.setBackground(Color.white);
             scrollPane.setBorder(BorderFactory.createEmptyBorder());
             scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
             scrollPane.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    scroll.setIcon(new ImageIcon(root + "Scrollonfocus.png"));
+                    scroll.setIcon(new ImageIcon(root+"Scrollonfocus.png"));
                 }
 
                 @Override
@@ -547,96 +781,948 @@ public class FlynnQQ {
             JScrollBar vScrollBar = scrollPane.getVerticalScrollBar();
             vScrollBar.setUnitIncrement(8);
 
-            friendList = new JLabel[10];
-            headList = new JLabel[10];
-            nameList = new JLabel[10];
-            for (int i = 0; i < friendList.length; i++) {
 
-                nameList[i] = new JLabel("Nickname(10.8.24." + (i + 97) + ")");
-                nameList[i].setFont(new Font("微软雅黑", Font.PLAIN, 13));
-                nameList[i].setOpaque(false);
-                //nameList[i].setBorder(BorderFactory.createLineBorder(Color.BLACK,1));
-                nameList[i].setBounds(name_normal_padding, i * name_normal_height, name_normal_width, name_normal_height);
+            count = 0;
+            try {
+                String sql = "Select * from users where ip <> ?";
+                ps = connection.prepareStatement(sql);
+                ps.setString(1,ip);
+                result = ps.executeQuery();
+                if(result!=null){
+                    result.last();
+                    count = result.getRow();
+                }
+                conList = new ConList[count];
+                headList = new JLabel[count];
+                nameList = new JLabel[count];
+                stateIcon = new JLabel[count];
+                if(count>0) {
+                    for (int i = 0; i < conList.length; i++) {
 
-                headList[i] = new JLabel(head_normal_bg);
-                headList[i].setOpaque(false);
-                headList[i].setBounds(list_left_padding, head_normal_top_padding + i * list_normal_height, normal_width, head_normal_height);
+                        result.absolute(i+1);
+                        String ip = result.getString("ip");
+                        String nickname = result.getString("nickname");
+                        String headPic = result.getString("headpic");
+                        HeadIcon normalIcon = new HeadIcon(headPic);
+                        normalIcon.setImage(normalIcon.getImage().getScaledInstance(head_normal_width,head_normal_height,Image.SCALE_DEFAULT));
+                        HeadIcon checkedIcon = new HeadIcon(headPic);
+                        checkedIcon.setImage(checkedIcon.getImage().getScaledInstance(head_onfocus_width,head_onfocus_height,Image.SCALE_DEFAULT));
 
-                friendList[i] = new JLabel(list_normal_bg);
-                friendList[i].setOpaque(false);
-                friendList[i].addMouseListener(new myMouseListener());
-                friendList[i].setBounds(0, i * list_normal_height, normal_width, list_normal_height);
+                        conList[i] = new ConList(ip,nickname,headPic,normalIcon,checkedIcon);
+                        conList[i].setOpaque(false);
+                        conList[i].addMouseListener(new myMouseListener());
+                        conList[i].setBounds(0, i * list_normal_height, normal_width, list_normal_height);
 
-                panel.setPreferredSize(new Dimension(280, (i + 2) * list_normal_height));
-                panel.add(nameList[i]);
-                panel.add(friendList[i]);
-                panel.add(headList[i]);
+                        nameList[i] = new JLabel(conList[i].getNickname()+" ("+conList[i].getIp()+")");
+                        nameList[i].setFont(new Font("微软雅黑", Font.PLAIN, 13));
+                        nameList[i].setOpaque(false);
+                        nameList[i].setBounds(name_normal_padding, i * name_normal_height, name_normal_width, name_normal_height);
+
+                        stateIcon[i] = new JLabel();
+                        stateIcon[i].setBounds(255,i * list_normal_height+list_normal_height/2-5,10,10);
+
+                        headList[i] = new JLabel(conList[i].getNormalIcon());
+                        headList[i].setBounds(list_left_padding, head_normal_top_padding + i * list_normal_height, normal_width, head_normal_height);
+
+                        panel.setPreferredSize(new Dimension(280, (i + 2) * list_normal_height));
+                        panel.add(stateIcon[i]);
+                        panel.add(nameList[i]);
+                        panel.add(conList[i]);
+                        panel.add(headList[i]);
+                    }
+                    mainPanel.add(scrollPane);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            mainPanel.add(scrollPane);
 
             min = new JLabel();
-            min.setBounds(220, 0, 30, 32);
+            min.setBounds(220,0,30,32);
             min.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
+                    min.setIcon(new ImageIcon(root+"min_normal.png"));
                     mainForm.dispose();
                 }
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    min.setIcon(new ImageIcon(root + "minicon.png"));
+                    min.setIcon(new ImageIcon(root + "min_onfocus.png"));
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    min.setIcon(null);
+                    min.setIcon(new ImageIcon(root+"min_normal.png"));
                 }
             });
             mainPanel.add(min);
 
             close = new JLabel();
-            close.setBounds(250, 0, 30, 32);
+            close.setBounds(250,0,30,32);;
             close.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     mainForm = null;
+                    if (systemTray==null) {
+                        systemTray=SystemTray.getSystemTray();
+                        if (trayIcon!=null) {
+                            systemTray.remove(trayIcon);
+                        }
+                    }
                     System.exit(0);
                 }
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    close.setIcon(new ImageIcon(root + "closeicon.png"));
+                    close.setIcon(new ImageIcon(root + "close_onfocus.png"));
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    close.setIcon(null);
+                    close.setIcon(new ImageIcon(root + "close_normal.png"));
                 }
             });
             mainPanel.add(close);
 
             JLabel backPic = new JLabel(new ImageIcon(root + "mainform.png"));
-            backPic.setBounds(0, 0, 280, 585);
+            backPic.setBounds(0,0,280,585);
             backPic.setOpaque(false);
             mainPanel.add(backPic);
 
-            userIcon.setImage(userIcon.getImage().getScaledInstance(58, 58, Image.SCALE_DEFAULT));
+            userIcon.setImage(userIcon.getImage().getScaledInstance(58,58, Image.SCALE_DEFAULT));
             JLabel headPic = new JLabel();
             headPic.setOpaque(false);
-            headPic.setBounds(32, 32, 58, 58);
+            headPic.setBounds(32,32,58,58);
             headPic.setIcon(userIcon);
             mainPanel.add(headPic);
 
             this.setLayout(null);
-            this.setBounds(1920 - (normal_width) * 4 / 3, 280 / 3, normal_width, normal_height);
+            this.setBounds(1920-(normal_width)*4/3,280/3,normal_width,normal_height);
+            this.addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (xPos == 0) return;
+                    setLocation(getX() + (int) (e.getXOnScreen() - xPos), getY() + (int) (e.getYOnScreen() - yPos));
+                    xPos = e.getXOnScreen();
+                    yPos = e.getYOnScreen();
+                }
+            });
             this.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                 }
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if(getMousePosition().getY()>32)
+                        return;
+                    if(xPos==0){
+                        xPos = e.getXOnScreen();
+                        yPos = e.getYOnScreen();
+                    }
+                }
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    if(xPos==0)return;
+                    mainForm.setLocation(mainForm.getX()+(int)(e.getXOnScreen() - xPos),mainForm.getY()+(int)(e.getYOnScreen() - yPos));
+                    xPos = 0;
+                    yPos = 0;
+                }
+            });
+
+            this.add(mainPanel);
+            //this.setVisible(true);
+            this.setResizable(false);
+            this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        }
+
+
+        private class myMouseListener extends MouseAdapter {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ConList get = (ConList) e.getSource();
+                if(e.getClickCount()==2){
+                    chatForm = chatPool.createChatForm(get);
+                    chatForm.setVisible(true);
+                    ////System.out.println(chatForm.hashCode());
+                    chatForm.inputText.requestFocus();
+                }else if(e.getClickCount()==1){
+                    for(int i = 0;i<conList.length;i++)
+                        if(conList[i]==get){
+                            selectNow = i;
+                            break;
+                        }
+                    listRefresh(get);
+                }
+            }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                ConList label = (ConList) e.getSource();
+                listRefresh(label);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                listRefresh(new ConList());
+            }
+        }
+
+        //刷新好友列表
+        private void listRefresh(ConList label){
+            for(int i = 0;i<conList.length;i++){
+                if(i<selectNow || selectNow < 0){
+                    nameList[i].setBounds(name_normal_padding,i*name_normal_height,name_normal_width,name_normal_height);
+                    conList[i].setBounds(0,i*list_normal_height,normal_width,list_normal_height);
+                    conList[i].setIcon(list_normal_bg);
+                    headList[i].setBounds(list_left_padding,i*list_normal_height + head_normal_top_padding,head_normal_width,head_normal_height);
+                    headList[i].setIcon(conList[i].getNormalIcon());
+                    stateIcon[i].setBounds(255,i * list_normal_height+list_normal_height/2-5,10,10);
+                }else if(i==selectNow){
+                    nameList[i].setBounds(name_onfocus_padding,i*name_normal_height,name_onfocus_width,name_onfocus_height);
+                    conList[i].setBounds(0,i*list_normal_height,normal_width,list_onfocus_height);
+                    conList[i].setIcon(list_checked_bg);
+                    headList[i].setBounds(list_left_padding,i*list_normal_height + head_onfocus_top_padding,head_onfocus_width,head_onfocus_height);
+                    headList[i].setIcon(conList[i].getCheckedIcon());
+                    stateIcon[i].setBounds(255,i*list_normal_height+list_onfocus_height/2-5,10,10);
+                }else if(i>selectNow){
+                    nameList[i].setBounds(name_normal_padding,i*name_normal_height + (name_onfocus_height-name_normal_height),name_normal_width,name_normal_height);
+                    conList[i].setBounds(0,i*list_normal_height + (list_onfocus_height-list_normal_height),normal_width,list_normal_height);
+                    conList[i].setIcon(list_normal_bg);
+                    headList[i].setBounds(list_left_padding,i*list_normal_height + head_normal_top_padding + (list_onfocus_height-list_normal_height),head_normal_width,head_normal_height);
+                    headList[i].setIcon(conList[i].getNormalIcon());
+                    stateIcon[i].setBounds(255,i*list_normal_height + (list_onfocus_height-list_normal_height)+list_normal_height/2-5,10,10);
+                }
+                if(conList[i]==label && i!=selectNow){
+                    conList[i].setIcon(list_onfocus_bg);
+                }
+            }
+        }
+    }
+
+
+    //TODO 拖拽监听器
+    private static class DropTargetListenerImpl implements DropTargetListener {
+        private JTextArea textArea;
+
+        private DropTargetListenerImpl(JTextArea textArea) {
+            this.textArea = textArea;
+        }
+
+        @Override
+        public void dragEnter(DropTargetDragEvent dtde) {
+            //System.out.println("dragEnter: 拖拽目标进入组件区域");
+        }
+
+        @Override
+        public void dragOver(DropTargetDragEvent dtde) {
+            //System.out.println("dragOver: 拖拽目标在组件区域内移动");
+        }
+
+        @Override
+        public void dragExit(DropTargetEvent dte) {
+            //System.out.println("dragExit: 拖拽目标离开组件区域");
+        }
+
+        @Override
+        public void dropActionChanged(DropTargetDragEvent dtde) {
+            //System.out.println("dropActionChanged: 当前 drop 操作被修改");
+        }
+
+        @Override
+        public void drop(DropTargetDropEvent dtde) {
+            boolean complete = false;
+            try {
+                if (dtde.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                    complete = true;
+                    dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+                    @SuppressWarnings("unchecked")
+                    List<File> fileList = (List<File>)dtde.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                    if (fileList.size()>0) {
+                        textArea.append(fileList.get(0).getAbsolutePath() + "\n");
+                    }
+                }
+            } catch (IOException | UnsupportedFlavorException e) {
+                e.printStackTrace();
+            }
+            if(complete)
+                dtde.dropComplete(true);
+        }
+    }
+
+    //TODO chat
+    //聊天窗口
+    private class ChatForm extends JFrame{
+        private StyledDocument typedStr;
+        private JTextArea inputText;
+        private JLabel openFile;
+        private SimpleAttributeSet styleIP;
+        private SimpleAttributeSet styleRec;
+        private SimpleAttributeSet styleSend;
+        private SimpleAttributeSet styleDef;
+        private Date date = null;
+        private ConList contact = null;
+        private int xPos = 0;
+        private int yPos = 0;
+
+        private ChatForm(ConList contact){
+            this.contact = contact;
+            init();
+        }
+
+        private void init() {
+            JPanel mainPanel = new JPanel();
+            mainPanel.setLayout(null);
+            mainPanel.setBounds(0,0,438,495);
+
+            JLabel nickname = new JLabel(contact.getNickname(),JLabel.CENTER);
+            nickname.setBounds(119,10,200,20);
+            nickname.setFont(new Font("微软雅黑",Font.PLAIN,17));
+            nickname.setForeground(Color.WHITE);
+            nickname.setOpaque(false);
+            mainPanel.add(nickname);
+
+            JLabel minIcon = new JLabel();
+            minIcon.setBounds(378,1,30,32);
+            minIcon.setIcon(new ImageIcon(root+"min_normal.png"));
+            minIcon.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    setExtendedState(JFrame.ICONIFIED);
+                }
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    minIcon.setIcon(new ImageIcon(root + "min_onfocus.png"));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    minIcon.setIcon(new ImageIcon(root + "min_normal.png"));
+                }
+            });
+            mainPanel.add(minIcon);
+
+            JLabel closeIcon = new JLabel();
+            closeIcon.setBounds(408,0,30,32);
+            closeIcon.setIcon(new ImageIcon(root + "close_normal.png"));
+            closeIcon.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    closeIcon.setIcon(new ImageIcon(root + "close_normal.png"));
+                    onClose();
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    closeIcon.setIcon(new ImageIcon(root + "close_onfocus.png"));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    closeIcon.setIcon(new ImageIcon(root + "close_normal.png"));
+                }
+            });
+            mainPanel.add(closeIcon);
+            JTextPane outputText = new JTextPane();
+            outputText.setEditable(false);
+
+            JScrollPane scrollPane = new JScrollPane(outputText);
+            scrollPane.setBounds(15,50,408,294);
+            scrollPane.setBorder(BorderFactory.createEmptyBorder());
+            mainPanel.add(scrollPane);
+
+            typedStr = outputText.getStyledDocument();
+            styleIP = new SimpleAttributeSet();
+            styleRec = new SimpleAttributeSet();
+            styleDef = new SimpleAttributeSet();
+            styleSend = new SimpleAttributeSet();
+
+            StyleConstants.setFontFamily(styleIP, "微软雅黑");
+            StyleConstants.setForeground(styleIP, new Color(40,205,251));
+            StyleConstants.setUnderline(styleIP,true);
+            StyleConstants.setFontSize(styleIP,12);
+
+            StyleConstants.setFontFamily(styleRec, "微软雅黑");
+            StyleConstants.setForeground(styleRec, new Color(0,54,255));
+            StyleConstants.setFontSize(styleRec, 12);
+            StyleConstants.setFontFamily(styleSend, "微软雅黑");
+            StyleConstants.setForeground(styleSend, new Color(23,128,99));
+            StyleConstants.setFontSize(styleSend,12);
+            StyleConstants.setFontFamily(styleDef, "微软雅黑");
+            StyleConstants.setForeground(styleDef, Color.BLACK);
+            StyleConstants.setFontSize(styleDef, 13);
+            StyleConstants.setSpaceAbove(styleDef,1.5f);
+
+            openFile = new JLabel();
+            openFile.setBounds(38,350,28,24);
+            openFile.setIcon(null);
+            openFile.setOpaque(false);
+            openFile.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    openFile.setIcon(null);
+                    fileForm.setVisible(true);
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    openFile.setIcon(new ImageIcon(root+"openfile.png"));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    openFile.setIcon(null);
+                }
+            });
+            mainPanel.add(openFile);
+
+            //TODO 添加监听器
+            inputText = new JTextArea();
+
+            inputText.setBounds(5,378,428,72);
+            inputText.setLineWrap(true);
+            inputText.setFont(new Font("微软雅黑",Font.PLAIN,16));
+            inputText.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    if(e.getKeyCode() == KeyEvent.VK_ENTER)
+                        send();
+                    else if(e.getKeyCode() == KeyEvent.VK_ESCAPE)
+                        onClose();
+                }
+            });
+            inputText.setBorder(BorderFactory.createEmptyBorder());
+            mainPanel.add(inputText);
+
+            // 创建拖拽目标监听器
+            DropTargetListener listener = new DropTargetListenerImpl(inputText);
+
+            // 在 textArea 上注册拖拽目标监听器
+            DropTarget dropTarget = new DropTarget(inputText, DnDConstants.ACTION_COPY_OR_MOVE, listener, true);
+
+            JLabel sendButton = new JLabel();
+            sendButton.setBounds(270,450,64,28);
+            sendButton.setIcon(new ImageIcon(root+"button_send_normal.png"));
+            sendButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    send();
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    sendButton.setIcon(new ImageIcon(root+"button_send_onfocus.png"));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    sendButton.setIcon(new ImageIcon(root+"button_send_normal.png"));
+                }
+            });
+            mainPanel.add(sendButton);
+
+            JLabel closeButton = new JLabel();
+            closeButton.setBounds(350,450,64,28);
+            closeButton.setIcon(new ImageIcon(root+"button_close_normal.png"));
+            closeButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    onClose();
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    closeButton.setIcon(new ImageIcon(root+"button_close_onfocus.png"));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    closeButton.setIcon(new ImageIcon(root+"button_close_normal.png"));
+                }
+            });
+            mainPanel.add(closeButton);
+
+            JLabel background = new JLabel();
+            background.setBounds(0,0,438,495);
+            background.setIcon(new ImageIcon(root + "chat_background.png"));
+            mainPanel.add(background);
+
+            this.setUndecorated(true);
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            this.setBounds((screenSize.width - 438)/2,(screenSize.height - 495)/2,438,495);
+            this.setResizable(false);
+            HeadIcon icon = new HeadIcon(contact.getHeadPic());
+            icon.setImage(icon.getImage().getScaledInstance(48,48,Image.SCALE_DEFAULT));
+            this.setIconImage(icon.getImage());
+            this.setLayout(null);
+            this.addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (xPos == 0) return;
+                    setLocation(getX() + (int) (e.getXOnScreen() - xPos), getY() + (int) (e.getYOnScreen() - yPos));
+                    xPos = e.getXOnScreen();
+                    yPos = e.getYOnScreen();
+                }
+            });
+            this.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                }
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if(getMousePosition().getY()>40)
+                        return;
+                    if(xPos==0){
+                        xPos = e.getXOnScreen();
+                        yPos = e.getYOnScreen();
+                    }
+                }
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    if(xPos==0)return;
+                    reLocate(e.getXOnScreen(),e.getYOnScreen());
+                    xPos = 0;
+                    yPos = 0;
+                }
+            });
+            this.add(mainPanel);
+            this.setVisible(true);
+        }
+
+        private void reLocate(int x,int y){
+            this.setLocation(this.getX()+(x - xPos),this.getY()+(y - yPos));
+        }
+
+        private void onClose(){
+            this.dispose();
+            //this.setVisible(false);
+        }
+
+        private void send(){
+            String filename = inputText.getText().trim();
+            File file = new File(filename);
+            if(!file.exists())
+                try {
+                    if(inputText.getText().trim().equals(""))
+                        return;
+                    date = new Date();
+                    String dateTime = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(date);
+                    typedStr.insertString(typedStr.getLength(),nick+"(",styleSend);
+                    typedStr.insertString(typedStr.getLength(),ip,styleIP);
+                    typedStr.insertString(typedStr.getLength(),") " + dateTime,styleSend);
+                    typedStr.insertString(typedStr.getLength(),"\n    "+inputText.getText()+"\n",styleDef);
+                    msgSend(contact.getIp(),inputText.getText());
+                    inputText.setText("");
+                    inputText.requestFocus();
+                } catch (Exception x) {
+                    x.printStackTrace();
+                }
+            else{
+                fileForm.addFile("upload",contact,filename);
+                fileForm.setVisible(true);
+            }
+
+        }
+
+        private void receive(String strRec){
+            try {
+                date = new Date();
+                String dateTime = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(date);
+                typedStr.insertString(typedStr.getLength(),contact.getNickname()+" (",styleRec);
+                typedStr.insertString(typedStr.getLength(),contact.getIp(),styleIP);
+                typedStr.insertString(typedStr.getLength(),") " + dateTime,styleRec);
+                typedStr.insertString(typedStr.getLength(),"\n    "+strRec+"\n",styleDef);
+            } catch (BadLocationException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class NoticeForm extends JFrame{
+        private ConList user;
+        private String state;
+        private NoticeForm(ConList user,String state){
+            this.user = user;
+            if(state.equals("OnConnect"))
+                this.state = "上线通知：";
+            else
+                this.state = "下线通知：";
+            init();
+        }
+        private void init(){
+
+            JPanel panel = new JPanel();
+            panel.setBounds(1760,938,160,100);
+            panel.setLayout(null);
+
+            HeadIcon icon = new HeadIcon(user.getHeadPic());
+            icon.setImage(icon.getImage().getScaledInstance(50,50,Image.SCALE_DEFAULT));
+            JLabel head = new JLabel();
+            head.setBounds(10,30,50,50);
+            head.setIcon(icon);
+
+            JLabel notice = new JLabel(state);
+            notice.setBounds(10,5,80,25);
+            notice.setFont(new Font("微软雅黑",Font.BOLD,12));
+            panel.add(notice);
+
+            JLabel name = new JLabel(user.getNickname());
+            name.setBounds(70,35,80,20);
+            name.setFont(new Font("微软雅黑",Font.PLAIN,12));
+            panel.add(name);
+
+            JLabel ip = new JLabel("IP:"+user.getIp());
+            ip.setBounds(70,60,80,20);
+            ip.setFont(new Font("微软雅黑",Font.PLAIN,12));
+            panel.add(ip);
+
+            JLabel back = new JLabel();
+            back.setBounds(0,0,160,100);
+            back.setOpaque(false);
+            back.setIcon(new ImageIcon(root+"notice.png"));
+            panel.add(back);
+            panel.add(head);
+
+            this.setUndecorated(true);
+            this.setType(Window.Type.UTILITY);
+            this.setBounds(1760,938,160,100);
+            this.add(panel);
+            this.setVisible(true);
+        }
+    }
+
+    //TODO file
+    private class FileForm extends JFrame{
+
+        private JLabel[] upload;
+        private JLabel[] username;
+        private JLabel[] filename;
+        private JLabel[] fileList;
+        private JLabel[] transOf;
+        private JLabel[] fileDir;
+        private JPanel innerPanel;
+        private int fileCount;
+        private int xPos = 0;
+        private int yPos = 0;
+        private Socket fileSocket;
+        private String fileRec;
+        private String fileSend;
+        private String downloadPath;
+        private FileList[] sendList;
+        private FileList[] recList;
+        private int sendCount;
+        private int recCount;
+        private Thread send;
+        private Thread receive;
+        private boolean isSend;
+        private boolean isRec;
+        private int sendIndex;
+
+        private FileForm(){
+            fileCount = 0;
+            isSend = false;
+            isRec = true;
+            sendCount = 0;
+            recCount = 0;
+            downloadPath = "E:\\feiq\\download";
+            if(!(new File(downloadPath).exists()))
+                new File(downloadPath).mkdirs();
+            downloadPath += "\\";
+            this.setVisible(false);
+            init();
+            try {
+                fileSocket = new Socket(Server.ip,2048);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            receive = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if(isSend)
+                        fileRec();
+                }
+            });
+            receive.start();
+            send = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if(isRec)
+                        fileSend();
+                }
+            });
+            sendList = new FileList[maxFileCount];
+            recList = new FileList[maxFileCount];
+            for (int i = 0; i < maxFileCount; i++) {
+                recList[i] = new FileList();
+                sendList[i] = new FileList();
+            }
+        }
+
+        private void isSend(String ip){
+            for (int i = 0; i < maxFileCount; i++) {
+                if(sendList[i].ip.equals(ip)){
+                    fileSend = sendList[i].filename;
+                    sendIndex = sendList[i].index;
+                    sendList[i].ip = "";
+                    sendList[i].filename = "";
+                    sendList[i].index = 0;
+                    sendCount--;
+                    isSend = true;
+                    break;
+                }
+            }
+        }
+
+        class FileList{
+            private String ip;
+            private String filename;
+            private int index;
+            FileList(){
+                this.ip = "";
+                this.filename = "";
+                this.index = 0;
+            }
+        }
+
+        private void fileSend(){
+            try{
+                File file = new File(fileSend);
+                FileInputStream fileInput = new FileInputStream(file);
+                OutputStream fileOutput = socket.getOutputStream();
+                fileOutput.write((ip+"@"+file.getName()+"/"+file.length()).getBytes());
+                long size = file.length();
+                byte[] bytes = new byte[1024];
+                int len;
+                long sendSize = 0;
+                while((len = fileInput.read(bytes)) != -1){
+                    fileOutput.write(bytes,0,len);
+                    sendSize += len;
+                    transOf[sendIndex].setText((sendSize/size*100)+"%");
+                }
+                transOf[sendIndex].setText("发送成功");
+                isSend = false;
+                sendOver();
+                msgSend("SendOver",ip);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        private void fileRec(){
+            try{
+                byte[] bytes = new byte[1024];
+                int len;
+                InputStream fileInput = fileSocket.getInputStream();
+                len = fileInput.read(bytes);
+                String str = new String(bytes,0,len);
+                int pos = str.indexOf("@");
+                int pos2 = str.indexOf("/");
+                String ip = str.substring(0,pos);
+                String name = str.substring(pos+1,pos2);
+                int size = Integer.parseInt(str.substring(pos2+1));
+                long recSize = 0;
+                int index = 0;
+                for (ConList list : conList) {
+                    if (list.getIp().equals(ip)) {
+                        index = addFile("download", list, name);
+                        break;
+                    }
+                }
+                File file = new File(downloadPath+name);
+                if(!file.exists())
+                    file.createNewFile();
+                FileOutputStream fileOutput = new FileOutputStream(file);
+                while((len = fileInput.read(bytes)) != -1){
+                    fileOutput.write(bytes,0,len);
+                    recSize += len;
+                    transOf[index].setText((recSize/size*100)+"%");
+                }
+                transOf[index].setText("接收成功");
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        private void sendOver(){
+            if(sendCount>0){
+                if(!isSend){
+                    for (int i = 0; i < maxFileCount; i++) {
+                        if(!sendList[i].ip.equals("")){
+                            msgSend("FileSend",sendList[i].ip);
+                        }
+                    }
+
+                }
+            }
+        }
+
+        private void appendSendList(String ip,String filename,int index){
+            for (int i = 0; i < maxFileCount; i++) {
+                if(sendList[i].filename.equals("")){
+                    sendList[i].ip = ip;
+                    sendList[i].filename = filename;
+                    sendList[i].index = index;
+                    sendCount++;
+                    break;
+                }
+            }
+            sendOver();
+        }
+
+
+        private int addFile(String type,ConList user,String name){
+            if(fileCount==0){
+                fileCount++;
+                upload = new JLabel[fileCount];
+                filename = new JLabel[fileCount];
+                username = new JLabel[fileCount];
+                transOf = new JLabel[fileCount];
+                fileList = new JLabel[fileCount];
+                fileDir = new JLabel[fileCount];
+            }else{
+                fileCount++;
+                upload = Arrays.copyOf(upload,fileCount);
+                username = Arrays.copyOf(username,fileCount);
+                filename = Arrays.copyOf(filename,fileCount);
+                transOf = Arrays.copyOf(filename,fileCount);
+                fileList = Arrays.copyOf(fileList,fileCount);
+                fileDir = Arrays.copyOf(fileDir,fileCount);
+
+            }
+            int top = (fileCount-1) * 30;
+            upload[fileCount - 1] = new JLabel();
+            upload[fileCount - 1].setIcon(new ImageIcon(root+type+".png"));
+            upload[fileCount - 1].setBounds(10,top,30,30);
+
+            filename[fileCount - 1] = new JLabel();
+            filename[fileCount - 1].setText(new File(name).getName());
+            filename[fileCount - 1].setFont(new Font("微软雅黑",Font.PLAIN,14));
+            filename[fileCount - 1].setBounds(50,top,120,30);
+
+            username[fileCount - 1] = new JLabel();
+            username[fileCount - 1].setText(user.getNickname());
+            username[fileCount - 1].setFont(new Font("微软雅黑",Font.PLAIN,14));
+            username[fileCount - 1].setBounds(180,top,150,30);
+
+            transOf[fileCount - 1] = new JLabel("0%");
+            transOf[fileCount - 1].setFont(new Font("微软雅黑",Font.PLAIN,14));
+            transOf[fileCount - 1].setBounds(350,top,40,30);
+
+            fileList[fileCount - 1] = new JLabel();
+            fileList[fileCount - 1].setBounds(0,top,430,30);
+            fileList[fileCount - 1].addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    JLabel label = (JLabel) e.getSource();
+                    label.setIcon(new ImageIcon(root + "filelist.png"));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    JLabel label = (JLabel) e.getSource();
+                    label.setIcon(null);
+                }
+            });
+
+            fileDir[fileCount - 1] = new JLabel();
+            fileDir[fileCount - 1].setIcon(new ImageIcon(root+"filedir.png"));
+            fileDir[fileCount - 1].setBounds(390,top,30,30);
+
+            innerPanel.add(upload[fileCount - 1]);
+            innerPanel.add(filename[fileCount - 1]);
+            innerPanel.add(username[fileCount - 1]);
+            innerPanel.add(transOf[fileCount - 1]);
+            innerPanel.add(fileDir[fileCount - 1]);
+            innerPanel.add(fileList[fileCount - 1]);
+            innerPanel.setPreferredSize(new Dimension(430,fileCount*30+30));
+
+            if(type.equals("upload"))
+                appendSendList(user.getIp(),name,fileCount - 1);
+            return fileCount - 1;
+        }
+
+        private void init() {
+            JPanel panel = new JPanel();
+            panel.setBounds(0, 0, 430, 260);
+            panel.setLayout(null);
+
+            innerPanel = new JPanel();
+            innerPanel.setBackground(Color.WHITE);
+            innerPanel.setLayout(null);
+
+            JScrollPane scroll = new JScrollPane(innerPanel);
+            scroll.setBorder(BorderFactory.createEmptyBorder());
+            scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            scroll.setBounds(0, 38, 450, 210);
+
+            JScrollBar vScrollBar = scroll.getVerticalScrollBar();
+            vScrollBar.setUnitIncrement(5);
+
+            scroll.setBackground(Color.white);
+            panel.add(scroll);
+
+            JLabel closeButton = new JLabel();
+            closeButton.setBounds(400, 0, 30, 32);
+            closeButton.setIcon(new ImageIcon(root + "close_normal.png"));
+            closeButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    onClose();
+                    closeButton.setIcon(new ImageIcon(root + "close_normal.png"));
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    closeButton.setIcon(new ImageIcon(root + "close_onfocus.png"));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    closeButton.setIcon(new ImageIcon(root + "close_normal.png"));
+                }
+            });
+            panel.add(closeButton);
+
+            JLabel minButton = new JLabel();
+            minButton.setBounds(370, 0, 30, 32);
+            minButton.setIcon(new ImageIcon(root + "min_normal.png"));
+            minButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    minButton.setIcon(new ImageIcon(root + "min_normal.png"));
+                    onMin();
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    minButton.setIcon(new ImageIcon(root + "min_onfocus.png"));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    minButton.setIcon(new ImageIcon(root + "min_normal.png"));
+                }
+            });
+            panel.add(minButton);
+
+            JLabel back = new JLabel();
+            back.setBounds(0, 0, 430, 260);
+            back.setIcon(new ImageIcon(root + "fileform.png"));
+            panel.add(back);
+            this.add(panel);
+            this.setUndecorated(true);
+            this.addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (xPos == 0) return;
+                    setLocation(getX() + (e.getXOnScreen() - xPos), getY() + (e.getYOnScreen() - yPos));
+                    xPos = e.getXOnScreen();
+                    yPos = e.getYOnScreen();
+                }
+            });
+            this.addMouseListener(new MouseAdapter() {
 
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    if (getMousePosition().getY() > 32)
+                    if (getMousePosition().getY() > 38)
                         return;
                     if (xPos == 0) {
                         xPos = e.getXOnScreen();
@@ -647,213 +1733,19 @@ public class FlynnQQ {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     if (xPos == 0) return;
-                    mainForm.setLocation(mainForm.getX() + (int) (e.getXOnScreen() - xPos), mainForm.getY() + (int) (e.getYOnScreen() - yPos));
+                    setLocation(getX() + (e.getXOnScreen() - xPos), getY() + (e.getYOnScreen() - yPos));
                     xPos = 0;
                     yPos = 0;
                 }
             });
-
-            this.add(mainPanel);
-            this.setVisible(true);
-            this.setResizable(false);
-            this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            this.setBounds((1920-430)/2,(1080-260)/2,430,260);
         }
 
-        private class myMouseListener extends MouseAdapter {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                JLabel label = (JLabel) e.getSource();
-                if (e.getClickCount() == 2) {
-                    if (charForm == null)
-                        charForm = new CharForm();
-                    else
-                        charForm.setVisible(true);
-                    charForm.inputText.requestFocus();
-                } else if (e.getClickCount() == 1) {
-                    for (int i = 0; i < friendList.length; i++)
-                        if (friendList[i] == label) {
-                            selectNow = i;
-                            break;
-                        }
-                    listRefresh(label);
-                }
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                JLabel label = (JLabel) e.getSource();
-                listRefresh(label);
-            }
+        private void onClose(){
+            this.dispose();
         }
-
-        private void listRefresh(JLabel label) {
-            for (int i = 0; i < friendList.length; i++) {
-                if (i < selectNow || selectNow < 0) {
-                    nameList[i].setBounds(name_normal_padding, i * name_normal_height, name_normal_width, name_normal_height);
-                    friendList[i].setBounds(0, i * list_normal_height, normal_width, list_normal_height);
-                    friendList[i].setIcon(list_normal_bg);
-                    headList[i].setBounds(list_left_padding, i * list_normal_height + head_normal_top_padding, head_normal_height, head_normal_height);
-                    headList[i].setIcon(head_normal_bg);
-                } else if (i == selectNow) {
-                    nameList[i].setBounds(name_onfocus_padding, i * name_normal_height, name_onfocus_width, name_onfocus_height);
-                    friendList[i].setBounds(0, i * list_normal_height, normal_width, list_onfocus_height);
-                    friendList[i].setIcon(list_checked_bg);
-                    headList[i].setBounds(list_left_padding, i * list_normal_height + head_onfocus_top_padding, head_onfocus_height, head_onfocus_height);
-                    headList[i].setIcon(head_checked_bg);
-                } else if (i > selectNow) {
-                    nameList[i].setBounds(name_normal_padding, i * name_normal_height + (name_onfocus_height - name_normal_height), name_normal_width, name_normal_height);
-                    friendList[i].setBounds(0, i * list_normal_height + (list_onfocus_height - list_normal_height), normal_width, list_normal_height);
-                    friendList[i].setIcon(list_normal_bg);
-                    headList[i].setBounds(list_left_padding, i * list_normal_height + head_normal_top_padding + (list_onfocus_height - list_normal_height), head_normal_height, head_normal_height);
-                    headList[i].setIcon(head_normal_bg);
-
-                }
-                if (friendList[i] == label && i != selectNow) {
-                    friendList[i].setIcon(list_onfocus_bg);
-                }
-            }
-        }
-    }
-
-
-    //聊天窗口
-    private class CharForm extends JFrame {
-        private StyledDocument typedStr;
-        private JTextArea inputText;
-        private SimpleAttributeSet styleRec;
-        private SimpleAttributeSet styleSend;
-        private SimpleAttributeSet styleDef;
-        private DatagramSocket dsRec;
-        private DatagramSocket dsSend;
-        private DatagramPacket dpRec;
-        private DatagramPacket dpSend;
-        private InetSocketAddress address;
-        private Date date;
-
-        private CharForm() {
-            init();
-            connect();
-        }
-
-        private void connect() {
-            Thread rec = new Thread(new Receive());
-            rec.start();
-        }
-
-        class Receive implements Runnable {
-            @Override
-            public void run() {
-                try {
-                    dpRec = new DatagramPacket(new byte[2048], 2048);
-                    while (true) {
-                        dsRec.receive(dpRec);
-                        byte[] data = dpRec.getData();
-                        date = new Date();
-                        String dateTime = new SimpleDateFormat("HH:mm:ss").format(date);
-                        typedStr.insertString(typedStr.getLength(), "袁启(" + dpRec.getAddress() + ")" + dateTime, styleRec);
-                        typedStr.insertString(typedStr.getLength(), "\n" + new String(data, 0, dpRec.getLength()) + "\n\n", styleDef);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-        private void init() {
-            date = new Date();
-
-            try { // 使用Windows的界面风格
-                UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                dsRec = new DatagramSocket(2009);
-            } catch (SocketException e) {
-                e.printStackTrace();
-            }
-
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            this.setBounds((screenSize.width - 500) / 2, (screenSize.height - 600) / 2, 510, 600);
-            this.setResizable(false);
-            this.setLayout(null);
-
-            JPanel mainPanel = new JPanel();
-            mainPanel.setLayout(null);
-            mainPanel.setBounds(0, 0, 500, 600);
-
-            JTextPane outputText = new JTextPane();
-            outputText.setEditable(false);
-
-            JScrollPane scrollPane = new JScrollPane(outputText);
-            scrollPane.setBounds(10, 10, 480, 400);
-            mainPanel.add(scrollPane);
-
-            typedStr = outputText.getStyledDocument();
-            styleRec = new SimpleAttributeSet();
-            styleDef = new SimpleAttributeSet();
-            styleSend = new SimpleAttributeSet();
-
-            StyleConstants.setFontFamily(styleRec, "微软雅黑");
-            StyleConstants.setForeground(styleRec, Color.BLUE);
-            StyleConstants.setFontSize(styleRec, 12);
-            StyleConstants.setFontFamily(styleSend, "微软雅黑");
-            StyleConstants.setForeground(styleSend, Color.RED);
-            StyleConstants.setFontSize(styleSend, 12);
-            StyleConstants.setFontFamily(styleDef, "微软雅黑");
-            StyleConstants.setForeground(styleDef, Color.BLACK);
-            StyleConstants.setFontSize(styleDef, 16);
-
-            inputText = new JTextArea();
-            inputText.setBounds(10, 420, 480, 100);
-            inputText.setLineWrap(true);
-            inputText.setFont(new Font("微软雅黑", Font.PLAIN, 16));
-            inputText.setBorder(BorderFactory.createLineBorder(Color.black, 1));
-            mainPanel.add(inputText);
-
-            JButton sendButton = new JButton("发送");
-            sendButton.setBounds(340, 530, 60, 30);
-            sendButton.addActionListener(new MyListener());
-            mainPanel.add(sendButton);
-
-            JButton closeButton = new JButton("关闭");
-            closeButton.setBounds(430, 530, 60, 30);
-            closeButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    charForm.setVisible(false);
-                }
-            });
-            mainPanel.add(closeButton);
-
-            this.add(mainPanel);
-            this.setVisible(true);
-            this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        }
-
-        class MyListener implements ActionListener {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    dsSend = new DatagramSocket();
-                    //for(String port:portList)
-                    address = new InetSocketAddress("255.255.255.255", 2019);
-                    byte[] data;
-                    data = inputText.getText().getBytes();
-                    dpSend = new DatagramPacket(data, data.length, address);
-                    date = new Date();
-                    String dateTime = new SimpleDateFormat("HH:mm:ss").format(date);
-                    typedStr.insertString(typedStr.getLength(), "Flynn(127.0.0.1)" + dateTime, styleSend);
-                    typedStr.insertString(typedStr.getLength(), "\n" + inputText.getText() + "\n\n", styleDef);
-
-                    dsSend.send(dpSend);
-                    inputText.setText("");
-                    inputText.requestFocus();
-                } catch (Exception x) {
-                    x.printStackTrace();
-                }
-            }
+        private void onMin(){
+            this.setExtendedState(JFrame.ICONIFIED);
         }
     }
 
