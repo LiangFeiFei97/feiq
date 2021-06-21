@@ -7,37 +7,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b7ab7c8-cde4-4a2f-b368-815c2f4910ba" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/LoginForm.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scrollbar.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scrollbarlostfocus.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Scrollbaronfocus.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/c.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/charform - 副本.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/charform.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/close.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/closeicon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/head.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/head_normal.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/head_small.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/LoginForm.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/closeicon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/head_checked.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/head_checked.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/head_normal.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/loading.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mainform.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mainform_old.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/minicon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FileUtils.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$CharForm$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$CharForm$MyListener.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$CharForm$Receive.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$CharForm.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/META-INF/FeiQ.kotlin_module" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$2.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$3.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$4.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$5.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$5.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$6.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$6.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$7.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$7.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$8.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$8.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatFormPool.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatFormPool.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ConList.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ConList.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$DropTargetListenerImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$DropTargetListenerImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$2.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$3.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$4.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$5.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$5.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$6.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$6.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$7.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$7.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$FileList.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$FileList.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$HeadIcon.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$HeadIcon.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$10.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$10.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$2.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$3.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$4.class" afterDir="false" />
@@ -52,31 +47,16 @@
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$3.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$4.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$5.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$5.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$6.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$6.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$7.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$7.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$8.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$8.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$myMouseListener.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$myMouseListener.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$NoticeForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$NoticeForm.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$Server.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$Server.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$msgRecThread.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$msgRecThread.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/Login1$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/Login1$2.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/Login1$3.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/Login1$4.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/Login1$5.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/Login1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/MyButton.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/MyLineBorder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/MySQL$User.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/MySQL.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/NewClass1$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/NewClass1$2.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/NewClass1$3.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/NewClass1$FontAttrib.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/NewClass1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/VerifyCodeUtils.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/s.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/send.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/feiq/FlynnQQ.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/feiq/FlynnQQ.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/feiq/Login1.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/feiq/MySQL.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/feiq/NewClass1.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,10 +77,22 @@
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="project.structure.last.edited" value="Artifacts" />
     <property name="project.structure.proportion" value="0.0" />
@@ -141,6 +133,7 @@
       </list>
     </recent_temporary>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -160,13 +153,26 @@
       <workItem from="1579250348828" duration="9725000" />
       <workItem from="1579312549905" duration="40180000" />
       <workItem from="1579502570977" duration="1804000" />
+      <workItem from="1624245158387" duration="4727000" />
     </task>
+    <task id="LOCAL-00001" summary="version1.0">
+      <created>1624245307036</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1624245307036</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="version1.0" />
+    <option name="LAST_COMMIT_MESSAGE" value="version1.0" />
   </component>
 </project>
