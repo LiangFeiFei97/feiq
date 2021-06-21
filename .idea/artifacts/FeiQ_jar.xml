@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="FeiQ:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/FeiQ_jar</output-path>
+    <root id="archive" name="FeiQ.jar">
+      <element id="module-output" name="FeiQ" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/mysql-connector-java-5.0.8-bin.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
