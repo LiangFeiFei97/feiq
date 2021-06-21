@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class FlynnQQ {
     private LoginForm loginForm = null;
@@ -35,10 +36,8 @@ public class FlynnQQ {
     private int headCount;
     private int head_num;
     private HeadIcon userIcon = null;
-    private ConList[] conList = null;
+    private FriendItem[] friendList = null;
     private ChatFormPool chatPool = null;
-    private msgRecThread recThread = null;
-    private int maxFileCount = 50;
 
     //TODO init
     private FlynnQQ() {
@@ -57,23 +56,17 @@ public class FlynnQQ {
         }
     }
 
-    private static class Server {
-        private static String ip = "10.8.24.99";
-        private static String password = "root";
-        private static String username = "root";
-        private static Server server = new Server();
-    }
 
     private void fileSend(String ip) {
         fileForm.isSend(ip);
     }
 
-    private class msgRecThread implements Runnable {
-        @Override
-        public void run() {
-            msgRec();
-        }
-    }
+//    private class msgRecThread implements Runnable {
+//        @Override
+//        public void run() {
+//            msgRec();
+//        }
+//    }
 
     private class ChatFormPool {
         private ChatForm[] chatPool;
@@ -97,7 +90,7 @@ public class FlynnQQ {
             return null;
         }
 
-        private ChatForm createChatForm(ConList con) {
+        private ChatForm createChatForm(FriendItem con) {
             if (getChatForm(con.getIp()) == null)
                 for (int i = 0; i < pCount; i++) {
                     if (this.ip[i].trim().equals("")) {
@@ -151,7 +144,7 @@ public class FlynnQQ {
                     fileSend(body);
                 } else {
                     if (chatPool.getChatForm(head) == null) {
-                        for (ConList con : conList) {
+                        for (FriendItem con : friendList) {
                             if (con.getIp().trim().equals(head)) {
                                 chatPool.createChatForm(con);
                                 break;
@@ -159,8 +152,8 @@ public class FlynnQQ {
                         }
                     }
                     if (chatPool.getChatForm(head) != null) {
-                        chatPool.getChatForm(head).receive(strRec);
-                        chatPool.getChatForm(head).setVisible(true);
+                        Objects.requireNonNull(chatPool.getChatForm(head)).receive(strRec);
+                        Objects.requireNonNull(chatPool.getChatForm(head)).setVisible(true);
                     }
                 }
             } catch (IOException e) {
@@ -182,76 +175,76 @@ public class FlynnQQ {
         }
     }
 
-    private static class HeadIcon extends ImageIcon {
-        HeadIcon(String filename) {
-            super("./headicons/" + filename);
-        }
-    }
+//    private static class HeadIcon extends ImageIcon {
+//        HeadIcon(String filename) {
+//            super("./headicons/" + filename);
+//        }
+//    }
 
-    private static class ConList extends JLabel {
-        private String ip;
-        private String nickname;
-        private String headPic;
-        private ImageIcon normalIcon;
-        private ImageIcon checkedIcon;
-
-        ConList() {
-            super();
-        }
-
-        ConList(ImageIcon filename) {
-            super(filename);
-        }
-
-        ConList(String ip, String nickname, String headPic, ImageIcon normalIcon, ImageIcon checkedIcon) {
-            this.ip = ip;
-            this.nickname = nickname;
-            this.headPic = headPic;
-            this.normalIcon = normalIcon;
-            this.checkedIcon = checkedIcon;
-        }
-
-        private ImageIcon getNormalIcon() {
-            return normalIcon;
-        }
-
-        public void setNormalIcon(ImageIcon normalIcon) {
-            this.normalIcon = normalIcon;
-        }
-
-        private ImageIcon getCheckedIcon() {
-            return checkedIcon;
-        }
-
-        public void setCheckedIcon(ImageIcon checkedIcon) {
-            this.checkedIcon = checkedIcon;
-        }
-
-
-        private String getIp() {
-            return ip;
-        }
-
-        public void setIp(String ip) {
-            this.ip = ip;
-        }
-
-        private String getNickname() {
-            return nickname;
-        }
-
-        public void setNickname(String nickname) {
-            this.nickname = nickname;
-        }
-
-        private String getHeadPic() {
-            return headPic;
-        }
-
-        public void setHeadPic(String headPic) {
-            this.headPic = headPic;
-        }
-    }
+//    private static class FriendItem extends JLabel {
+//        private String ip;
+//        private String nickname;
+//        private String headPic;
+//        private ImageIcon normalIcon;
+//        private ImageIcon checkedIcon;
+//
+//        FriendItem() {
+//            super();
+//        }
+//
+//        FriendItem(ImageIcon filename) {
+//            super(filename);
+//        }
+//
+//        FriendItem(String ip, String nickname, String headPic, ImageIcon normalIcon, ImageIcon checkedIcon) {
+//            this.ip = ip;
+//            this.nickname = nickname;
+//            this.headPic = headPic;
+//            this.normalIcon = normalIcon;
+//            this.checkedIcon = checkedIcon;
+//        }
+//
+//        private ImageIcon getNormalIcon() {
+//            return normalIcon;
+//        }
+//
+//        public void setNormalIcon(ImageIcon normalIcon) {
+//            this.normalIcon = normalIcon;
+//        }
+//
+//        private ImageIcon getCheckedIcon() {
+//            return checkedIcon;
+//        }
+//
+//        public void setCheckedIcon(ImageIcon checkedIcon) {
+//            this.checkedIcon = checkedIcon;
+//        }
+//
+//
+//        private String getIp() {
+//            return ip;
+//        }
+//
+//        public void setIp(String ip) {
+//            this.ip = ip;
+//        }
+//
+//        private String getNickname() {
+//            return nickname;
+//        }
+//
+//        public void setNickname(String nickname) {
+//            this.nickname = nickname;
+//        }
+//
+//        private String getHeadPic() {
+//            return headPic;
+//        }
+//
+//        public void setHeadPic(String headPic) {
+//            this.headPic = headPic;
+//        }
+//    }
 
     //登录窗口
     //TODO login
@@ -510,7 +503,12 @@ public class FlynnQQ {
                 IPText.setText(ip);
                 Class.forName("com.mysql.jdbc.Driver");
                 //connection = DriverManager.getConnection("jdbc:mysql://"+Server.ip+"/feiq",Server.username,Server.password);
-                connection = DriverManager.getConnection("jdbc:mysql://10.8.24.6/feiq", "root", "root");
+                if (ip.equals(Server.ip)) {
+                    connection = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/feiq", "root", "root");
+                } else {
+                    connection = DriverManager.getConnection("jdbc:mysql://192.168.212.151:3306/feiq", "root", "root");
+//                    connection = DriverManager.getConnection("jdbc:mysql://" + Server.ip + ":3306/feiq", Server.username, Server.password);
+                }
                 ps = connection.prepareStatement("Select * from users where ip = ?");
                 ps.setString(1, ip);
                 result = ps.executeQuery();
@@ -575,8 +573,7 @@ public class FlynnQQ {
                     result = false;
                 }
                 if (result) {
-                    recThread = new msgRecThread();
-                    new Thread(recThread).start();
+                    new Thread(() -> msgRec()).start();
                     msgSend("connect", "");
                     loginForm.setVisible(false);
                     loginForm = null;
@@ -670,14 +667,14 @@ public class FlynnQQ {
             chatPool = new ChatFormPool();
             this.username = username;
             init();
-            listRefresh(new ConList());
+            listRefresh(new FriendItem());
             fileForm = new FileForm();
         }
 
         private void stateRefresh(String str) {
             if (count > 0) {
                 for (int i = 0; i < count; i++) {
-                    if (str.contains(conList[i].getIp()))
+                    if (str.contains(friendList[i].getIp()))
                         stateIcon[i].setIcon(new ImageIcon(root + "onconnect.png"));
                     else
                         stateIcon[i].setIcon(new ImageIcon(root + "disconnect.png"));
@@ -687,20 +684,17 @@ public class FlynnQQ {
 
         private void notice(String type, String ip) {
             for (int i = 0; i < count; i++) {
-                if (ip.equals(conList[i].getIp())) {
+                if (ip.equals(friendList[i].getIp())) {
                     stateIcon[i].setIcon(new ImageIcon(root + type + ".png"));
-                    noticeForm = new NoticeForm(conList[i], type);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(3000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            noticeForm.setVisible(false);
-                            noticeForm = null;
+                    noticeForm = new NoticeForm(friendList[i], type);
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
+                        noticeForm.setVisible(false);
+                        noticeForm = null;
                     }).start();
                 }
             }
@@ -807,12 +801,12 @@ public class FlynnQQ {
                     result.last();
                     count = result.getRow();
                 }
-                conList = new ConList[count];
+                friendList = new FriendItem[count];
                 headList = new JLabel[count];
                 nameList = new JLabel[count];
                 stateIcon = new JLabel[count];
                 if (count > 0) {
-                    for (int i = 0; i < conList.length; i++) {
+                    for (int i = 0; i < friendList.length; i++) {
 
                         result.absolute(i + 1);
                         String ip = result.getString("ip");
@@ -823,12 +817,12 @@ public class FlynnQQ {
                         HeadIcon checkedIcon = new HeadIcon(headPic);
                         checkedIcon.setImage(checkedIcon.getImage().getScaledInstance(head_onfocus_width, head_onfocus_height, Image.SCALE_DEFAULT));
 
-                        conList[i] = new ConList(ip, nickname, headPic, normalIcon, checkedIcon);
-                        conList[i].setOpaque(false);
-                        conList[i].addMouseListener(new myMouseListener());
-                        conList[i].setBounds(0, i * list_normal_height, normal_width, list_normal_height);
+                        friendList[i] = new FriendItem(ip, nickname, headPic, normalIcon, checkedIcon);
+                        friendList[i].setOpaque(false);
+                        friendList[i].addMouseListener(new myMouseListener(chatForm));
+                        friendList[i].setBounds(0, i * list_normal_height, normal_width, list_normal_height);
 
-                        nameList[i] = new JLabel(conList[i].getNickname() + " (" + conList[i].getIp() + ")");
+                        nameList[i] = new JLabel(friendList[i].getNickname() + " (" + friendList[i].getIp() + ")");
                         nameList[i].setFont(new Font("微软雅黑", Font.PLAIN, 13));
                         nameList[i].setOpaque(false);
                         nameList[i].setBounds(name_normal_padding, i * name_normal_height, name_normal_width, name_normal_height);
@@ -836,13 +830,13 @@ public class FlynnQQ {
                         stateIcon[i] = new JLabel();
                         stateIcon[i].setBounds(255, i * list_normal_height + list_normal_height / 2 - 5, 10, 10);
 
-                        headList[i] = new JLabel(conList[i].getNormalIcon());
+                        headList[i] = new JLabel(friendList[i].getNormalIcon());
                         headList[i].setBounds(list_left_padding, head_normal_top_padding + i * list_normal_height, normal_width, head_normal_height);
 
                         panel.setPreferredSize(new Dimension(280, (i + 2) * list_normal_height));
                         panel.add(stateIcon[i]);
                         panel.add(nameList[i]);
-                        panel.add(conList[i]);
+                        panel.add(friendList[i]);
                         panel.add(headList[i]);
                     }
                     mainPanel.add(scrollPane);
@@ -955,17 +949,24 @@ public class FlynnQQ {
 
 
         private class myMouseListener extends MouseAdapter {
+            private ChatForm chatForm;
+
+            private myMouseListener(ChatForm form) {
+                this.chatForm = form;
+            }
+
             @Override
             public void mouseClicked(MouseEvent e) {
-                ConList get = (ConList) e.getSource();
+                FriendItem get = (FriendItem) e.getSource();
                 if (e.getClickCount() == 2) {
+
                     chatForm = chatPool.createChatForm(get);
                     chatForm.setVisible(true);
                     ////System.out.println(chatForm.hashCode());
                     chatForm.inputText.requestFocus();
                 } else if (e.getClickCount() == 1) {
-                    for (int i = 0; i < conList.length; i++)
-                        if (conList[i] == get) {
+                    for (int i = 0; i < friendList.length; i++)
+                        if (friendList[i] == get) {
                             selectNow = i;
                             break;
                         }
@@ -975,43 +976,43 @@ public class FlynnQQ {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                ConList label = (ConList) e.getSource();
+                FriendItem label = (FriendItem) e.getSource();
                 listRefresh(label);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                listRefresh(new ConList());
+                listRefresh(new FriendItem());
             }
         }
 
         //刷新好友列表
-        private void listRefresh(ConList label) {
-            for (int i = 0; i < conList.length; i++) {
+        private void listRefresh(FriendItem label) {
+            for (int i = 0; i < friendList.length; i++) {
                 if (i < selectNow || selectNow < 0) {
                     nameList[i].setBounds(name_normal_padding, i * name_normal_height, name_normal_width, name_normal_height);
-                    conList[i].setBounds(0, i * list_normal_height, normal_width, list_normal_height);
-                    conList[i].setIcon(list_normal_bg);
+                    friendList[i].setBounds(0, i * list_normal_height, normal_width, list_normal_height);
+                    friendList[i].setIcon(list_normal_bg);
                     headList[i].setBounds(list_left_padding, i * list_normal_height + head_normal_top_padding, head_normal_width, head_normal_height);
-                    headList[i].setIcon(conList[i].getNormalIcon());
+                    headList[i].setIcon(friendList[i].getNormalIcon());
                     stateIcon[i].setBounds(255, i * list_normal_height + list_normal_height / 2 - 5, 10, 10);
                 } else if (i == selectNow) {
                     nameList[i].setBounds(name_onfocus_padding, i * name_normal_height, name_onfocus_width, name_onfocus_height);
-                    conList[i].setBounds(0, i * list_normal_height, normal_width, list_onfocus_height);
-                    conList[i].setIcon(list_checked_bg);
+                    friendList[i].setBounds(0, i * list_normal_height, normal_width, list_onfocus_height);
+                    friendList[i].setIcon(list_checked_bg);
                     headList[i].setBounds(list_left_padding, i * list_normal_height + head_onfocus_top_padding, head_onfocus_width, head_onfocus_height);
-                    headList[i].setIcon(conList[i].getCheckedIcon());
+                    headList[i].setIcon(friendList[i].getCheckedIcon());
                     stateIcon[i].setBounds(255, i * list_normal_height + list_onfocus_height / 2 - 5, 10, 10);
                 } else if (i > selectNow) {
                     nameList[i].setBounds(name_normal_padding, i * name_normal_height + (name_onfocus_height - name_normal_height), name_normal_width, name_normal_height);
-                    conList[i].setBounds(0, i * list_normal_height + (list_onfocus_height - list_normal_height), normal_width, list_normal_height);
-                    conList[i].setIcon(list_normal_bg);
+                    friendList[i].setBounds(0, i * list_normal_height + (list_onfocus_height - list_normal_height), normal_width, list_normal_height);
+                    friendList[i].setIcon(list_normal_bg);
                     headList[i].setBounds(list_left_padding, i * list_normal_height + head_normal_top_padding + (list_onfocus_height - list_normal_height), head_normal_width, head_normal_height);
-                    headList[i].setIcon(conList[i].getNormalIcon());
+                    headList[i].setIcon(friendList[i].getNormalIcon());
                     stateIcon[i].setBounds(255, i * list_normal_height + (list_onfocus_height - list_normal_height) + list_normal_height / 2 - 5, 10, 10);
                 }
-                if (conList[i] == label && i != selectNow) {
-                    conList[i].setIcon(list_onfocus_bg);
+                if (friendList[i] == label && i != selectNow) {
+                    friendList[i].setIcon(list_onfocus_bg);
                 }
             }
         }
@@ -1081,11 +1082,11 @@ public class FlynnQQ {
         private SimpleAttributeSet styleSend;
         private SimpleAttributeSet styleDef;
         private Date date = null;
-        private ConList contact = null;
+        private FriendItem contact = null;
         private int xPos = 0;
         private int yPos = 0;
 
-        private ChatForm(ConList contact) {
+        private ChatForm(FriendItem contact) {
             this.contact = contact;
             init();
         }
@@ -1317,6 +1318,7 @@ public class FlynnQQ {
         }
 
         private void onClose() {
+            chatPool.returnChatForm(chatPool.getChatForm(contact.getIp()));
             this.dispose();
             //this.setVisible(false);
         }
@@ -1362,10 +1364,10 @@ public class FlynnQQ {
     }
 
     private class NoticeForm extends JFrame {
-        private ConList user;
+        private FriendItem user;
         private String state;
 
-        private NoticeForm(ConList user, String state) {
+        private NoticeForm(FriendItem user, String state) {
             this.user = user;
             if (state.equals("OnConnect"))
                 this.state = "上线通知：";
@@ -1433,8 +1435,8 @@ public class FlynnQQ {
         private String fileRec;
         private String fileSend;
         private String downloadPath;
-        private FileList[] sendList;
-        private FileList[] recList;
+        private FileItem[] sendList;
+        private FileItem[] recList;
         private int sendCount;
         private int recCount;
         private Thread send;
@@ -1442,6 +1444,7 @@ public class FlynnQQ {
         private boolean isSend;
         private boolean isRec;
         private int sendIndex;
+        private final int maxFileCount = 50;
 
         private FileForm() {
             fileCount = 0;
@@ -1475,11 +1478,11 @@ public class FlynnQQ {
                         fileSend();
                 }
             });
-            sendList = new FileList[maxFileCount];
-            recList = new FileList[maxFileCount];
+            sendList = new FileItem[maxFileCount];
+            recList = new FileItem[maxFileCount];
             for (int i = 0; i < maxFileCount; i++) {
-                recList[i] = new FileList();
-                sendList[i] = new FileList();
+                recList[i] = new FileItem();
+                sendList[i] = new FileItem();
             }
         }
 
@@ -1498,23 +1501,23 @@ public class FlynnQQ {
             }
         }
 
-        class FileList {
-            private String ip;
-            private String filename;
-            private int index;
-
-            FileList() {
-                this.ip = "";
-                this.filename = "";
-                this.index = 0;
-            }
-        }
+//        class FileItem {
+//            private String ip;
+//            private String filename;
+//            private int index;
+//
+//            FileItem() {
+//                this.ip = "";
+//                this.filename = "";
+//                this.index = 0;
+//            }
+//        }
 
         private void fileSend() {
             try {
                 File file = new File(fileSend);
                 FileInputStream fileInput = new FileInputStream(file);
-                OutputStream fileOutput = socket.getOutputStream();
+                OutputStream fileOutput = fileSocket.getOutputStream();
                 fileOutput.write((ip + "@" + file.getName() + "/" + file.length()).getBytes());
                 long size = file.length();
                 byte[] bytes = new byte[1024];
@@ -1548,7 +1551,7 @@ public class FlynnQQ {
                 int size = Integer.parseInt(str.substring(pos2 + 1));
                 long recSize = 0;
                 int index = 0;
-                for (ConList list : conList) {
+                for (FriendItem list : friendList) {
                     if (list.getIp().equals(ip)) {
                         index = addFile("download", list, name);
                         break;
@@ -1596,7 +1599,7 @@ public class FlynnQQ {
         }
 
 
-        private int addFile(String type, ConList user, String name) {
+        private int addFile(String type, FriendItem user, String name) {
             if (fileCount == 0) {
                 fileCount++;
                 upload = new JLabel[fileCount];
