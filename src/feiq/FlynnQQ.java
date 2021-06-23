@@ -1481,7 +1481,7 @@ public class FlynnQQ {
                     int index = 0;
                     for (FriendItem list : friendList) {
                         if (list.getIp().equals(ip)) {
-                            index = addFile("download", list, name);
+                            index = addFile("download", list, downloadPath + name);
                             this.setVisible(true);
                             break;
                         }
@@ -1569,13 +1569,13 @@ public class FlynnQQ {
             filename[fileCount - 1].setBounds(50, top, 120, 30);
 
             username[fileCount - 1] = new JLabel();
-            username[fileCount - 1].setText(user.getNickname());
+            username[fileCount - 1].setText(user.getIp());
             username[fileCount - 1].setFont(new Font("微软雅黑", Font.PLAIN, 14));
-            username[fileCount - 1].setBounds(180, top, 150, 30);
+            username[fileCount - 1].setBounds(180, top, 120, 30);
 
             transOf[fileCount - 1] = new JLabel();
             transOf[fileCount - 1].setFont(new Font("微软雅黑", Font.PLAIN, 14));
-            transOf[fileCount - 1].setBounds(350, top, 40, 30);
+            transOf[fileCount - 1].setBounds(310, top, 80, 30);
             if (type.equals("upload"))
                 transOf[fileCount - 1].setText("等待发送");
             else
@@ -1600,6 +1600,17 @@ public class FlynnQQ {
             fileDir[fileCount - 1] = new JLabel();
             fileDir[fileCount - 1].setIcon(new ImageIcon(root + "filedir.png"));
             fileDir[fileCount - 1].setBounds(390, top, 30, 30);
+            fileDir[fileCount - 1].addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    String[] cmdDir = {"explorer.exe", new File(name).getParent()};
+                    try {
+                        Runtime.getRuntime().exec(cmdDir);
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
+            });
 
             innerPanel.add(upload[fileCount - 1]);
             innerPanel.add(filename[fileCount - 1]);
