@@ -57,16 +57,9 @@ public class FlynnQQ {
     }
 
 
-    private void fileSend(String ip) {
-        fileForm.isSend(ip);
+    private void sendFile(String ip) {
+        fileForm.startSend(ip);
     }
-
-//    private class msgRecThread implements Runnable {
-//        @Override
-//        public void run() {
-//            msgRec();
-//        }
-//    }
 
     private class ChatFormPool {
         private ChatForm[] chatPool;
@@ -140,8 +133,8 @@ public class FlynnQQ {
                     mainForm.notice(head, body);
                 } else if (head.equals("Refresh")) {
                     mainForm.stateRefresh(body);
-                } else if (head.equals("FileSendReady")) {
-                    fileSend(body);
+                } else if (head.equals("FileRecReady")) {
+                    sendFile(body);
                 } else {
                     if (chatPool.getChatForm(head) == null) {
                         for (FriendItem con : friendList) {
@@ -174,77 +167,6 @@ public class FlynnQQ {
             e.printStackTrace();
         }
     }
-
-//    private static class HeadIcon extends ImageIcon {
-//        HeadIcon(String filename) {
-//            super("./headicons/" + filename);
-//        }
-//    }
-
-//    private static class FriendItem extends JLabel {
-//        private String ip;
-//        private String nickname;
-//        private String headPic;
-//        private ImageIcon normalIcon;
-//        private ImageIcon checkedIcon;
-//
-//        FriendItem() {
-//            super();
-//        }
-//
-//        FriendItem(ImageIcon filename) {
-//            super(filename);
-//        }
-//
-//        FriendItem(String ip, String nickname, String headPic, ImageIcon normalIcon, ImageIcon checkedIcon) {
-//            this.ip = ip;
-//            this.nickname = nickname;
-//            this.headPic = headPic;
-//            this.normalIcon = normalIcon;
-//            this.checkedIcon = checkedIcon;
-//        }
-//
-//        private ImageIcon getNormalIcon() {
-//            return normalIcon;
-//        }
-//
-//        public void setNormalIcon(ImageIcon normalIcon) {
-//            this.normalIcon = normalIcon;
-//        }
-//
-//        private ImageIcon getCheckedIcon() {
-//            return checkedIcon;
-//        }
-//
-//        public void setCheckedIcon(ImageIcon checkedIcon) {
-//            this.checkedIcon = checkedIcon;
-//        }
-//
-//
-//        private String getIp() {
-//            return ip;
-//        }
-//
-//        public void setIp(String ip) {
-//            this.ip = ip;
-//        }
-//
-//        private String getNickname() {
-//            return nickname;
-//        }
-//
-//        public void setNickname(String nickname) {
-//            this.nickname = nickname;
-//        }
-//
-//        private String getHeadPic() {
-//            return headPic;
-//        }
-//
-//        public void setHeadPic(String headPic) {
-//            this.headPic = headPic;
-//        }
-//    }
 
     //登录窗口
     //TODO login
@@ -793,9 +715,10 @@ public class FlynnQQ {
 
             count = 0;
             try {
-                String sql = "Select * from users where ip <> ?";
+//                String sql = "Select * from users where ip <> ?";
+                String sql = "Select * from users";
                 ps = connection.prepareStatement(sql);
-                ps.setString(1, ip);
+//                ps.setString(1, ip);
                 result = ps.executeQuery();
                 if (result != null) {
                     result.last();
@@ -1420,7 +1343,6 @@ public class FlynnQQ {
 
     //TODO file
     private class FileForm extends JFrame {
-
         private JLabel[] upload;
         private JLabel[] username;
         private JLabel[] filename;
@@ -1432,6 +1354,7 @@ public class FlynnQQ {
         private int xPos = 0;
         private int yPos = 0;
         private Socket fileSocket;
+        private Socket fileRecSocket;
         private String fileRec;
         private String fileSend;
         private String downloadPath;
@@ -1441,15 +1364,20 @@ public class FlynnQQ {
         private int recCount;
         private Thread send;
         private Thread receive;
-        private boolean isSend;
-        private boolean isRec;
+        private boolean waitForSend;
+        private boolean alreadySend;
+        private boolean fileOnSend;
+        private boolean alreadyRec;
+        private boolean fileOnRec;
         private int sendIndex;
         private final int maxFileCount = 50;
 
         private FileForm() {
             fileCount = 0;
-            isSend = false;
-            isRec = true;
+            alreadySend = false;
+            fileOnSend = false;
+            alreadyRec = true;
+            fileOnRec = false;
             sendCount = 0;
             recCount = 0;
             downloadPath = "C:\\feiq\\download";
@@ -1458,26 +1386,25 @@ public class FlynnQQ {
             downloadPath += "\\";
             this.setVisible(false);
             init();
+
+            //连接文件传送服务器
             try {
                 fileSocket = new Socket(Server.ip, 2048);
+//                fileRecSocket = new Socket(Server.ip, 2050);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            receive = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    if (isSend)
-                        fileRec();
-                }
+            //接收线程
+            receive = new Thread(() -> {
+                while (true) fileRec();
             });
             receive.start();
-            send = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    if (isRec)
-                        fileSend();
-                }
+            //发送线程
+            send = new Thread(() -> {
+                while (true) sendFile();
             });
+            send.start();
+
             sendList = new FileItem[maxFileCount];
             recList = new FileItem[maxFileCount];
             for (int i = 0; i < maxFileCount; i++) {
@@ -1486,7 +1413,7 @@ public class FlynnQQ {
             }
         }
 
-        private void isSend(String ip) {
+        private void startSend(String ip) {
             for (int i = 0; i < maxFileCount; i++) {
                 if (sendList[i].ip.equals(ip)) {
                     fileSend = sendList[i].filename;
@@ -1495,92 +1422,105 @@ public class FlynnQQ {
                     sendList[i].filename = "";
                     sendList[i].index = 0;
                     sendCount--;
-                    isSend = true;
+                    alreadySend = true;
                     break;
                 }
             }
         }
 
-//        class FileItem {
-//            private String ip;
-//            private String filename;
-//            private int index;
-//
-//            FileItem() {
-//                this.ip = "";
-//                this.filename = "";
-//                this.index = 0;
-//            }
-//        }
-
-        private void fileSend() {
-            try {
-                File file = new File(fileSend);
-                FileInputStream fileInput = new FileInputStream(file);
-                OutputStream fileOutput = fileSocket.getOutputStream();
-                fileOutput.write((ip + "@" + file.getName() + "/" + file.length()).getBytes());
-                long size = file.length();
-                byte[] bytes = new byte[1024];
-                int len;
-                long sendSize = 0;
-                while ((len = fileInput.read(bytes)) != -1) {
-                    fileOutput.write(bytes, 0, len);
-                    sendSize += len;
-                    transOf[sendIndex].setText((sendSize / size * 100) + "%");
+        private void sendFile() {
+            if (alreadySend) {
+                try {
+                    alreadySend = false;
+                    File file = new File(fileSend);
+                    FileInputStream fileInput = new FileInputStream(file);
+                    OutputStream fileOutput = fileSocket.getOutputStream();
+                    fileOutput.write((ip + "@" + file.getName() + "/" + file.length()).getBytes());
+                    fileOutput.flush();
+                    long size = file.length();
+                    byte[] bytes = new byte[1024];
+                    int len;
+                    long sendSize = 0;
+                    while ((len = fileInput.read(bytes)) != -1) {
+                        fileOutput.write(bytes, 0, len);
+                        fileOutput.flush();
+                        sendSize += len;
+                        transOf[sendIndex].setText((sendSize / size * 100) + "%");
+                        Thread.sleep(500);
+                    }
+                    fileOutput.write("@END".getBytes());
+                    fileOutput.flush();
+                    fileInput.close();
+//                    transOf[sendIndex].setText("完成");
+                    alreadySend = false;
+                    waitForSend = false;
+                    msgSend("SendOver", ip);
+                    Thread.sleep(1000);
+                    checkFileSend();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                transOf[sendIndex].setText("发送成功");
-                isSend = false;
-                sendOver();
-                msgSend("SendOver", ip);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
 
         private void fileRec() {
-            try {
-                byte[] bytes = new byte[1024];
-                int len;
-                InputStream fileInput = fileSocket.getInputStream();
-                len = fileInput.read(bytes);
-                String str = new String(bytes, 0, len);
-                int pos = str.indexOf("@");
-                int pos2 = str.indexOf("/");
-                String ip = str.substring(0, pos);
-                String name = str.substring(pos + 1, pos2);
-                int size = Integer.parseInt(str.substring(pos2 + 1));
-                long recSize = 0;
-                int index = 0;
-                for (FriendItem list : friendList) {
-                    if (list.getIp().equals(ip)) {
-                        index = addFile("download", list, name);
-                        break;
+            if (alreadyRec) {
+                try {
+                    byte[] bytes = new byte[1024];
+                    int len;
+                    InputStream fileInput = fileSocket.getInputStream();
+                    len = fileInput.read(bytes);
+                    fileOnRec = true;
+                    String str = new String(bytes, 0, len);
+                    int pos = str.indexOf("@");
+                    int pos2 = str.indexOf("/");
+                    String ip = str.substring(0, pos);
+                    String name = str.substring(pos + 1, pos2);
+                    int size = Integer.parseInt(str.substring(pos2 + 1));
+                    long recSize = 0;
+                    int index = 0;
+                    for (FriendItem list : friendList) {
+                        if (list.getIp().equals(ip)) {
+                            index = addFile("download", list, name);
+                            this.setVisible(true);
+                            break;
+                        }
                     }
+                    File file = new File(downloadPath + name);
+                    if (!file.exists())
+                        file.createNewFile();
+                    FileOutputStream fileOutput = new FileOutputStream(file);
+                    while ((len = fileInput.read(bytes)) != -1) {
+                        String txt = new String(bytes);
+                        if (txt.contains("@END")) {
+                            bytes = txt.substring(0, txt.indexOf("@END")).getBytes();
+                            len = bytes.length;
+                        }
+                        fileOutput.write(bytes, 0, len);
+                        recSize += len;
+                        transOf[index].setText((recSize / size * 100) + "%");
+                        if (txt.contains("@END")) break;
+                    }
+                    fileOutput.flush();
+                    fileOutput.close();
+                    transOf[index].setText("完成");
+                    fileOnRec = false;
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                File file = new File(downloadPath + name);
-                if (!file.exists())
-                    file.createNewFile();
-                FileOutputStream fileOutput = new FileOutputStream(file);
-                while ((len = fileInput.read(bytes)) != -1) {
-                    fileOutput.write(bytes, 0, len);
-                    recSize += len;
-                    transOf[index].setText((recSize / size * 100) + "%");
-                }
-                transOf[index].setText("接收成功");
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
 
-        private void sendOver() {
+        private void checkFileSend() {
             if (sendCount > 0) {
-                if (!isSend) {
+                if (!waitForSend) {
                     for (int i = 0; i < maxFileCount; i++) {
                         if (!sendList[i].ip.equals("")) {
                             msgSend("FileSend", sendList[i].ip);
+                            waitForSend = true;
+                            return;
                         }
                     }
-
                 }
             }
         }
@@ -1595,9 +1535,9 @@ public class FlynnQQ {
                     break;
                 }
             }
-            sendOver();
-        }
 
+            checkFileSend();
+        }
 
         private int addFile(String type, FriendItem user, String name) {
             if (fileCount == 0) {
@@ -1633,9 +1573,13 @@ public class FlynnQQ {
             username[fileCount - 1].setFont(new Font("微软雅黑", Font.PLAIN, 14));
             username[fileCount - 1].setBounds(180, top, 150, 30);
 
-            transOf[fileCount - 1] = new JLabel("0%");
+            transOf[fileCount - 1] = new JLabel();
             transOf[fileCount - 1].setFont(new Font("微软雅黑", Font.PLAIN, 14));
             transOf[fileCount - 1].setBounds(350, top, 40, 30);
+            if (type.equals("upload"))
+                transOf[fileCount - 1].setText("等待发送");
+            else
+                transOf[fileCount - 1].setText("等待接受");
 
             fileList[fileCount - 1] = new JLabel();
             fileList[fileCount - 1].setBounds(0, top, 430, 30);
@@ -1665,8 +1609,7 @@ public class FlynnQQ {
             innerPanel.add(fileList[fileCount - 1]);
             innerPanel.setPreferredSize(new Dimension(430, fileCount * 30 + 30));
 
-            if (type.equals("upload"))
-                appendSendList(user.getIp(), name, fileCount - 1);
+            if (type.equals("upload")) appendSendList(user.getIp(), name, fileCount - 1);
             return fileCount - 1;
         }
 
