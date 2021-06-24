@@ -129,25 +129,31 @@ public class FlynnQQ {
                 String head = strRec.substring(0, pos);
                 if (strRec.length() > pos)
                     body = strRec.substring(pos + 1);
-                if (head.equals("OnConnect") || head.equals("DisConnect")) {
-                    mainForm.notice(head, body);
-                } else if (head.equals("Refresh")) {
-                    mainForm.stateRefresh(body);
-                } else if (head.equals("FileRecReady")) {
-                    sendFile(body);
-                } else {
-                    if (chatPool.getChatForm(head) == null) {
-                        for (FriendItem con : friendList) {
-                            if (con.getIp().trim().equals(head)) {
-                                chatPool.createChatForm(con);
-                                break;
+                switch (head) {
+                    case "OnConnect":
+                    case "DisConnect":
+                        mainForm.notice(head, body);
+                        break;
+                    case "Refresh":
+                        mainForm.stateRefresh(body);
+                        break;
+                    case "FileRecReady":
+                        sendFile(body);
+                        break;
+                    default:
+                        if (chatPool.getChatForm(head) == null) {
+                            for (FriendItem con : friendList) {
+                                if (con.getIp().trim().equals(head)) {
+                                    chatPool.createChatForm(con);
+                                    break;
+                                }
                             }
                         }
-                    }
-                    if (chatPool.getChatForm(head) != null) {
-                        Objects.requireNonNull(chatPool.getChatForm(head)).receive(strRec);
-                        Objects.requireNonNull(chatPool.getChatForm(head)).setVisible(true);
-                    }
+                        if (chatPool.getChatForm(head) != null) {
+                            Objects.requireNonNull(chatPool.getChatForm(head)).receive(strRec);
+                            Objects.requireNonNull(chatPool.getChatForm(head)).setVisible(true);
+                        }
+                        break;
                 }
             } catch (IOException e) {
                 //System.out.println("服务器正在维护中！连接已断开...");
@@ -172,7 +178,6 @@ public class FlynnQQ {
     //TODO login
     private class LoginForm extends JFrame {
         private JLabel loadPic;
-        private JLabel loginPic;
         private JLabel IPText;
         private JTextField nickText;
         private JLabel tip;
@@ -274,7 +279,6 @@ public class FlynnQQ {
             JLabel close;
             close = new JLabel();
             close.setBounds(370, 0, 30, 32);
-            ;
             close.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -334,10 +338,9 @@ public class FlynnQQ {
             Panel.add(loginButton);
 
             ImageIcon backPic = new ImageIcon(root + "FirstPage.png");
-            loginPic = new JLabel();
+            JLabel loginPic = new JLabel();
             loginPic.setOpaque(false);
             loginPic.setBounds(0, 0, 400, 300);
-            ;
             loginPic.setIcon(backPic);
             Panel.add(loginPic);
 
@@ -353,15 +356,12 @@ public class FlynnQQ {
             headFirst.setVisible(true);
             headNow = new JLabel();
             headNow.setBounds(160, 60, 80, 80);
-            headNow.addMouseWheelListener(new MouseWheelListener() {
-                @Override
-                public void mouseWheelMoved(MouseWheelEvent e) {
-                    int scroll = e.getWheelRotation();
-                    if (scroll > 0)
-                        isNext();
-                    else if (scroll < 0)
-                        isLast();
-                }
+            headNow.addMouseWheelListener(e -> {
+                int scroll = e.getWheelRotation();
+                if (scroll > 0)
+                    isNext();
+                else if (scroll < 0)
+                    isLast();
             });
             headNow.setVisible(true);
             headNext = new JLabel();
@@ -425,13 +425,14 @@ public class FlynnQQ {
                 IPText.setText(ip);
                 Class.forName("com.mysql.jdbc.Driver");
                 //connection = DriverManager.getConnection("jdbc:mysql://"+Server.ip+"/feiq",Server.username,Server.password);
-                if (ip.equals(Server.ip)) {
+                if (ip.equals(Server.sqlIp)) {
                     connection = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/feiq", "root", "root");
                 } else {
-                    connection = DriverManager.getConnection("jdbc:mysql://192.168.212.151:3306/feiq", "root", "root");
-//                    connection = DriverManager.getConnection("jdbc:mysql://" + Server.ip + ":3306/feiq", Server.username, Server.password);
+//                    connection = DriverManager.getConnection("jdbc:mysql://192.168.212.151:3306/feiq", "root", "root");
+                    connection = DriverManager.getConnection("jdbc:mysql://" + Server.sqlIp + ":3306/feiq", Server.username, Server.password);
                 }
-                ps = connection.prepareStatement("Select * from users where ip = ?");
+                String sql = "Select * from users where ip = ?";
+                ps = connection.prepareStatement(sql);
                 ps.setString(1, ip);
                 result = ps.executeQuery();
                 isFind = false;
@@ -459,12 +460,7 @@ public class FlynnQQ {
 
         //连接按钮单击事件
         private void connect() {
-            load = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    loginVerity();
-                }
-            });
+            load = new Thread(this::loginVerity);
             loadPic.setVisible(true);
             icon = new HeadIcon(head_path);
             icon.setImage(icon.getImage().getScaledInstance(80, 80, Image.SCALE_DEFAULT));
@@ -487,7 +483,7 @@ public class FlynnQQ {
                 } else
                     userIcon = new HeadIcon(head_path);
                 mainForm = new MainForm(nick);
-                Thread.sleep(2000);
+                Thread.sleep(1000);
                 boolean result = true;
                 try {
                     socket = new Socket(Server.ip, 2020);
@@ -495,7 +491,7 @@ public class FlynnQQ {
                     result = false;
                 }
                 if (result) {
-                    new Thread(() -> msgRec()).start();
+                    new Thread(FlynnQQ.this::msgRec).start();
                     msgSend("connect", "");
                     loginForm.setVisible(false);
                     loginForm = null;
@@ -542,15 +538,10 @@ public class FlynnQQ {
         private JLabel[] headList;
         private JLabel[] nameList;
         private JLabel[] stateIcon;
-        private JPanel mainPanel;
-        private JTextField search;
-        private JScrollPane scrollPane;
         private String username;
         private JLabel min;
         private JLabel close;
         private NoticeForm noticeForm;
-        private Socket fileSocket;
-        private Thread fileThread;
 
         private int count;
         private double xPos = 0;
@@ -574,8 +565,6 @@ public class FlynnQQ {
         private int head_onfocus_width = 48;
         private int head_normal_top_padding = 5;
         private int head_onfocus_top_padding = 6;
-        private ImageIcon head_normal_bg;
-        private ImageIcon head_checked_bg;
 
         private int name_normal_width = 180;
         private int name_normal_height = 40;
@@ -625,15 +614,9 @@ public class FlynnQQ {
         private void init() {
             this.setUndecorated(true);
             this.setType(Type.UTILITY);
-            Image icon = new ImageIcon(root + "icon.png").getImage();
+            Image icon = new ImageIcon(root + "icon5.png").getImage();
             trayIcon = new TrayIcon(icon, "fq");
-            //trayIcon.setImageAutoSize(true);
-            trayIcon.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    setVisible(true);
-                }
-            });
+            trayIcon.addActionListener(e -> setVisible(true));
             try {
                 if (systemTray == null) {
                     systemTray = SystemTray.getSystemTray();
@@ -648,8 +631,7 @@ public class FlynnQQ {
             list_normal_bg = new ImageIcon(root + "list_white.png");
             list_onfocus_bg = new ImageIcon(root + "list_blue.png");
             list_checked_bg = new ImageIcon(root + "list_checked_blue.png");
-            head_normal_bg = new ImageIcon(root + "head_normal.png");
-            head_checked_bg = new ImageIcon(root + "head_checked.jpg");
+
             selectNow = -1;
             min = new JLabel();
             close = new JLabel();
@@ -658,7 +640,7 @@ public class FlynnQQ {
             panel.setBackground(Color.white);
             panel.setVisible(true);
 
-            mainPanel = new JPanel();
+            JPanel mainPanel = new JPanel();
             mainPanel.setBounds(0, 0, normal_width, normal_height);
             mainPanel.setLayout(null);
 
@@ -668,7 +650,7 @@ public class FlynnQQ {
             userName.setBounds(105, 50, 125, 25);
             mainPanel.add(userName);
 
-            search = new JTextField();
+            JTextField search = new JTextField();
             search.setOpaque(false);
             search.setBounds(35, 110, 240, 20);
             search.setFont(new Font("微软雅黑", Font.PLAIN, 10));
@@ -676,7 +658,7 @@ public class FlynnQQ {
             mainPanel.add(search);
 
             //滚动条
-            scrollPane = new JScrollPane(panel);
+            JScrollPane scrollPane = new JScrollPane(panel);
             JLabel scroll = new JLabel(new ImageIcon(root + "Scrollbarlostfocus.png"));
             scroll.setVisible(false);
             scroll.setOpaque(false);
@@ -731,6 +713,7 @@ public class FlynnQQ {
                 if (count > 0) {
                     for (int i = 0; i < friendList.length; i++) {
 
+                        assert result != null;
                         result.absolute(i + 1);
                         String ip = result.getString("ip");
                         String nickname = result.getString("nickname");
@@ -791,7 +774,6 @@ public class FlynnQQ {
 
             close = new JLabel();
             close.setBounds(250, 0, 30, 32);
-            ;
             close.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -1005,7 +987,7 @@ public class FlynnQQ {
         private SimpleAttributeSet styleSend;
         private SimpleAttributeSet styleDef;
         private Date date = null;
-        private FriendItem contact = null;
+        private FriendItem contact;
         private int xPos = 0;
         private int yPos = 0;
 
@@ -1143,7 +1125,7 @@ public class FlynnQQ {
             DropTargetListener listener = new DropTargetListenerImpl(inputText);
 
             // 在 textArea 上注册拖拽目标监听器
-            DropTarget dropTarget = new DropTarget(inputText, DnDConstants.ACTION_COPY_OR_MOVE, listener, true);
+            new DropTarget(inputText, DnDConstants.ACTION_COPY_OR_MOVE, listener, true);
 
             JLabel sendButton = new JLabel();
             sendButton.setBounds(270, 450, 64, 28);
@@ -1204,7 +1186,7 @@ public class FlynnQQ {
                 @Override
                 public void mouseDragged(MouseEvent e) {
                     if (xPos == 0) return;
-                    setLocation(getX() + (int) (e.getXOnScreen() - xPos), getY() + (int) (e.getYOnScreen() - yPos));
+                    setLocation(getX() + (e.getXOnScreen() - xPos), getY() + (e.getYOnScreen() - yPos));
                     xPos = e.getXOnScreen();
                     yPos = e.getYOnScreen();
                 }
@@ -1354,35 +1336,28 @@ public class FlynnQQ {
         private int xPos = 0;
         private int yPos = 0;
         private Socket fileSocket;
-        private Socket fileRecSocket;
-        private String fileRec;
         private String fileSend;
         private String downloadPath;
         private FileItem[] sendList;
         private FileItem[] recList;
         private int sendCount;
-        private int recCount;
         private Thread send;
         private Thread receive;
         private boolean waitForSend;
         private boolean alreadySend;
-        private boolean fileOnSend;
         private boolean alreadyRec;
-        private boolean fileOnRec;
         private int sendIndex;
         private final int maxFileCount = 50;
 
         private FileForm() {
             fileCount = 0;
             alreadySend = false;
-            fileOnSend = false;
             alreadyRec = true;
-            fileOnRec = false;
             sendCount = 0;
-            recCount = 0;
             downloadPath = "C:\\feiq\\download";
-            if (!(new File(downloadPath).exists()))
+            if (!(new File(downloadPath).exists())) {
                 new File(downloadPath).mkdirs();
+            }
             downloadPath += "\\";
             this.setVisible(false);
             init();
@@ -1390,7 +1365,6 @@ public class FlynnQQ {
             //连接文件传送服务器
             try {
                 fileSocket = new Socket(Server.ip, 2048);
-//                fileRecSocket = new Socket(Server.ip, 2050);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -1451,7 +1425,7 @@ public class FlynnQQ {
                     fileOutput.write("@END".getBytes());
                     fileOutput.flush();
                     fileInput.close();
-//                    transOf[sendIndex].setText("完成");
+                    transOf[sendIndex].setText("完成");
                     alreadySend = false;
                     waitForSend = false;
                     msgSend("SendOver", ip);
@@ -1470,7 +1444,6 @@ public class FlynnQQ {
                     int len;
                     InputStream fileInput = fileSocket.getInputStream();
                     len = fileInput.read(bytes);
-                    fileOnRec = true;
                     String str = new String(bytes, 0, len);
                     int pos = str.indexOf("@");
                     int pos2 = str.indexOf("/");
@@ -1504,7 +1477,6 @@ public class FlynnQQ {
                     fileOutput.flush();
                     fileOutput.close();
                     transOf[index].setText("完成");
-                    fileOnRec = false;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -8,53 +8,8 @@
   <component name="ChangeListManager">
     <list default="true" id="2b7ab7c8-cde4-4a2f-b368-815c2f4910ba" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$2.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$3.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$4.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$5.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$5.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$6.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$6.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$7.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$7.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$8.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm$8.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatForm.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatFormPool.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ChatFormPool.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$ConList.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$DropTargetListenerImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$DropTargetListenerImpl.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$2.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$3.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$4.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$5.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$5.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$6.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$6.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$7.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm$FileList.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$FileForm.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$HeadIcon.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$10.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$10.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$2.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$3.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$4.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$5.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$5.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$6.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$6.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$7.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$7.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$8.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$8.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$9.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm$9.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$LoginForm.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$2.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$3.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$4.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$5.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$5.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$6.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$6.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$7.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$7.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$myMouseListener.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm$myMouseListener.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$MainForm.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$NoticeForm.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$NoticeForm.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$Server.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ$msgRecThread.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/FeiQ/feiq/FlynnQQ.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/feiq/FlynnQQ.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/feiq/FlynnQQ.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/feiq/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/feiq/Server.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -124,13 +79,15 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
       <option name="arquillianRunConfiguration">
         <value>
           <option name="containerStateName" value="" />
         </value>
       </option>
-      <option name="TEST_OBJECT" value="class" />
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -166,7 +123,8 @@
       <workItem from="1624259950706" duration="4176000" />
       <workItem from="1624265531255" duration="6288000" />
       <workItem from="1624277154932" duration="4562000" />
-      <workItem from="1624413704130" duration="16608000" />
+      <workItem from="1624413704130" duration="18078000" />
+      <workItem from="1624501447082" duration="4185000" />
     </task>
     <task id="LOCAL-00001" summary="version1.0">
       <created>1624245307036</created>
@@ -196,7 +154,14 @@
       <option name="project" value="LOCAL" />
       <updated>1624440175951</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="version1.0">
+      <created>1624441353643</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1624441353643</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -208,16 +173,5 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="version1.0" />
     <option name="LAST_COMMIT_MESSAGE" value="version1.0" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/feiq/FlynnQQ.java</url>
-          <line>1453</line>
-          <option name="timeStamp" value="16" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
