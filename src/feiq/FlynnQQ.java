@@ -38,8 +38,7 @@ public class FlynnQQ {
     private HeadIcon userIcon = null;
     private FriendItem[] friendList = null;
     private ChatFormPool chatPool = null;
-
-    //TODO init
+    
     private FlynnQQ() {
         init();
     }
@@ -106,7 +105,7 @@ public class FlynnQQ {
     }
 
 
-    //TODO msgRec
+    //接收消息监听
     private void msgRec() {
         while (true) {
             try {
@@ -175,7 +174,6 @@ public class FlynnQQ {
     }
 
     //登录窗口
-    //TODO login
     private class LoginForm extends JFrame {
         private JLabel loadPic;
         private JLabel IPText;
@@ -418,7 +416,6 @@ public class FlynnQQ {
         }
 
         //连接数据库
-        //TODO sql
         private void verity() {
             try {
 
@@ -533,7 +530,6 @@ public class FlynnQQ {
 
 
     //主窗口
-    //TODO main
     private class MainForm extends JFrame {
         private JLabel[] headList;
         private JLabel[] nameList;
@@ -924,7 +920,7 @@ public class FlynnQQ {
     }
 
 
-    //TODO 拖拽监听器
+    //拖拽文件
     private class DropTargetListenerImpl implements DropTargetListener {
         private JTextArea textArea;
 
@@ -975,8 +971,7 @@ public class FlynnQQ {
                 dtde.dropComplete(true);
         }
     }
-
-    //TODO chat
+    
     //聊天窗口
     private class ChatForm extends JFrame {
         private StyledDocument typedStr;
@@ -1102,8 +1097,7 @@ public class FlynnQQ {
                 }
             });
             mainPanel.add(openFile);
-
-            //TODO 添加监听器
+            
             inputText = new JTextArea();
 
             inputText.setBounds(5, 378, 428, 72);
@@ -1323,7 +1317,7 @@ public class FlynnQQ {
         }
     }
 
-    //TODO file
+    //文件窗口
     private class FileForm extends JFrame {
         private JLabel[] upload;
         private JLabel[] username;
